@@ -38,7 +38,6 @@ Tokenized risk instruments that represent the right to claim impermanent loss fr
 - **Charts:** Recharts
 - **Icons:** Lucide React
 - **Animations:** Motion (Framer Motion)
-- **AI Integration:** Google Gemini AI
 - **Backend:** Express with better-sqlite3
 
 ## Project Structure
@@ -78,14 +77,7 @@ npm install
 Create a `.env.local` file in the root directory:
 
 ```bash
-# Copy the example file
-cp .env.example .env.local
-```
-
-Then add your Gemini API key:
-
-```env
-GEMINI_API_KEY=your_api_key_here
+# No environment variables required
 ```
 
 ### Running Locally
