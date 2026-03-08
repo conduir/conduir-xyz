@@ -1,0 +1,5 @@
+{
+  "name": "Conduir",
+  "description": "Institutional liquidity infrastructure primitive for the Polkadot Hub separating Impermanent Loss risk from liquidity provision.",
+  "requestFramePermissions": []
+}
