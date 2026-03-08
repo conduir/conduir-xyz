@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Wallet, BarChart3, ArrowRight, Shield, Layers, History, Settings, Bell, Search, ShieldCheck, FileSignature, Clock, CheckCircle2 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Wallet, BarChart3, ArrowRight, Shield, Layers, History, Settings, Bell, Search, ShieldCheck, FileSignature, Clock, CheckCircle2, TrendingUp, Coins, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { DepositFlow, VoucherFlow, FeeFlow } from '../components/flows';
 
 const liquidityData = [
   { name: 'Oct', value: 4000000 },
@@ -14,6 +15,10 @@ const liquidityData = [
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'treasury' | 'protocol' | 'vouchers' | 'approvals' | 'history' | 'settings'>('treasury');
+  const [depositModalOpen, setDepositModalOpen] = useState(false);
+  const [voucherModalOpen, setVoucherModalOpen] = useState(false);
+  const [feeModalOpen, setFeeModalOpen] = useState(false);
+  const [selectedVault, setSelectedVault] = useState<typeof liquidityData[number] | null>(null);
 
   return (
     <div className="pt-20 min-h-screen bg-[#0A0B10] flex flex-col md:flex-row">
@@ -182,7 +187,10 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    <button className="w-full md:w-auto bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => setDepositModalOpen(true)}
+                      className="w-full md:w-auto bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                    >
                       <FileSignature className="w-4 h-4" /> Propose Deposit
                     </button>
                   </div>
@@ -211,7 +219,12 @@ export default function Dashboard() {
               <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl">
                 <div className="text-sm text-slate-400 mb-2">Fees Paid to Splitter</div>
                 <div className="text-3xl font-display font-bold">$45,200</div>
-                <div className="text-slate-500 text-sm mt-2">40% Upfront / 60% Accrued</div>
+                <button
+                  onClick={() => setFeeModalOpen(true)}
+                  className="text-sm text-[#E6007A] hover:text-[#C20066] mt-2 flex items-center gap-1 transition-colors"
+                >
+                  View breakdown <TrendingUp className="w-3 h-3" />
+                </button>
               </div>
             </div>
 
@@ -284,7 +297,10 @@ export default function Dashboard() {
                     <span className="text-slate-400">Vouchers to Mint</span>
                     <span className="font-bold text-blue-400">450 ILV</span>
                   </div>
-                  <button className="w-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-4 rounded-xl font-bold transition-colors shadow-[0_0_20px_rgba(59,130,246,0.2)] flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => setVoucherModalOpen(true)}
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-4 rounded-xl font-bold transition-colors shadow-[0_0_20px_rgba(59,130,246,0.2)] flex items-center justify-center gap-2"
+                  >
                     <FileSignature className="w-4 h-4" /> Propose Registration via Safe
                   </button>
                 </div>
@@ -346,13 +362,26 @@ export default function Dashboard() {
 
         {activeTab === 'vouchers' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold">IL Voucher Engine</h2>
+              <button
+                onClick={() => setVoucherModalOpen(true)}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2"
+              >
+                <FileSignature className="w-4 h-4" /> Register Vault
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 { id: 'ILV-DOT-USDC', pool: 'DOT / USDC', amount: '450', status: 'Active', oracle: 'Chainlink', change: '+5.2%' },
                 { id: 'ILV-ASTR-DOT', pool: 'ASTR / DOT', amount: '1,200', status: 'Traded', oracle: 'Pyth', change: '-1.4%' },
                 { id: 'ILV-GLMR-USDC', pool: 'GLMR / USDC', amount: '850', status: 'Redeemed', oracle: 'Chainlink', change: '0.0%' },
               ].map((voucher, i) => (
-                <div key={i} className="bg-[#13141C] border border-white/10 p-6 rounded-2xl hover:border-white/20 transition-colors relative overflow-hidden">
+                <button
+                  key={i}
+                  onClick={() => setVoucherModalOpen(true)}
+                  className="bg-[#13141C] border border-white/10 p-6 rounded-2xl hover:border-white/20 transition-colors relative overflow-hidden text-left w-full"
+                >
                   <div className="flex justify-between items-start mb-4">
                     <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
                       <Layers className="w-5 h-5 text-purple-400" />
@@ -376,7 +405,7 @@ export default function Dashboard() {
                       {voucher.change}
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </motion.div>
@@ -493,6 +522,11 @@ export default function Dashboard() {
           </motion.div>
         )}
       </main>
+
+      {/* Flow Modals */}
+      <DepositFlow isOpen={depositModalOpen} onClose={() => setDepositModalOpen(false)} />
+      <VoucherFlow isOpen={voucherModalOpen} onClose={() => setVoucherModalOpen(false)} />
+      <FeeFlow isOpen={feeModalOpen} onClose={() => setFeeModalOpen(false)} />
     </div>
   );
 }

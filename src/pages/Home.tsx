@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion } from 'motion/react';
-import { ArrowRight, Shield, Activity, Layers, Lock, Zap, ChevronRight, BookOpen, BarChart3, Wallet } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ArrowRight, Shield, Activity, Layers, Lock, Zap, ChevronRight, BookOpen, BarChart3, Wallet, ChevronLeft, CheckCircle2, Coins, FileText, TrendingUp } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const Hero = () => {
@@ -255,6 +255,298 @@ const DashboardPreview = () => (
   </section>
 );
 
+// Flow Walkthrough Component
+type FlowType = 'deposit' | 'voucher' | 'fees';
+
+interface FlowStep {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  details?: string[];
+}
+
+const flows: Record<FlowType, { title: string; description: string; color: string; steps: FlowStep[] }> = {
+  deposit: {
+    title: 'LP Deposit & Vault Matching',
+    description: 'DAO Treasuries deposit assets and get automatically matched to the best vaults with IL protection.',
+    color: '#E6007A',
+    steps: [
+      {
+        title: 'Deposit Assets',
+        description: 'DAO deposits single-sided (DOT, USDT) or dual-sided liquidity via the Vault Router.',
+        icon: <Lock className="w-6 h-6" />,
+        details: ['Select asset and amount', 'Choose single or dual-sided deposit', 'Connect Safe multi-sig wallet']
+      },
+      {
+        title: 'Automatic Matching',
+        description: 'Conduir\'s matching engine routes your deposit to the highest-APY vault with available capacity.',
+        icon: <TrendingUp className="w-6 h-6" />,
+        details: ['Algorithmic APY/capacity optimization', 'Real-time vault availability check', 'Instant routing confirmation']
+      },
+      {
+        title: 'Receipt Tokens',
+        description: 'Receive ERC-20 receipt tokens representing your deposit and claim to future yield.',
+        icon: <Coins className="w-6 h-6" />,
+        details: ['Tokens minted 1:1 with deposit value', 'Transferable and tradable', 'Redeemable anytime']
+      },
+      {
+        title: 'IL Protection',
+        description: 'Any impermanent loss is covered by protocol collateral—not your treasury.',
+        icon: <Shield className="w-6 h-6" />,
+        details: ['100% IL protection guarantee', 'Protected at smart contract level', 'No IL exposure to LP']
+      }
+    ]
+  },
+  voucher: {
+    title: 'IL Voucher Lifecycle',
+    description: 'Protocols underwrite IL risk by depositing collateral and receiving tradable IL Voucher tokens.',
+    color: '#3b82f6',
+    steps: [
+      {
+        title: 'Protocol Registration',
+        description: 'Register your vault and pay the listing fee to the Fee Splitter contract.',
+        icon: <FileText className="w-6 h-6" />,
+        details: ['Select target trading pair (e.g., DOT/USDC)', 'Pay 40/60 hybrid listing fee', 'Vault appears in DAO marketplace']
+      },
+      {
+        title: 'Collateral Deposit',
+        description: 'Deposit native tokens as collateral to underwrite potential IL payouts.',
+        icon: <Coins className="w-6 h-6" />,
+        details: ['Collateral based on IL volatility', 'Locked for vault duration', 'Refunded if no IL occurs']
+      },
+      {
+        title: 'Mint IL Vouchers',
+        description: 'Receive ERC-20 ILV tokens representing your underwritten risk exposure.',
+        icon: <Layers className="w-6 h-6" />,
+        details: ['Tradeable on secondary markets', 'Priced by market demand', 'Hedge or speculate on IL']
+      },
+      {
+        title: 'Settlement',
+        description: 'If IL occurs, oracles report it and vouchers are burned to pay out LPs.',
+        icon: <CheckCircle2 className="w-6 h-6" />,
+        details: ['Chainlink/Pyth price feeds', 'Automated IL calculation', 'Transparent on-chain settlement']
+      }
+    ]
+  },
+  fees: {
+    title: 'Fee Collection Mechanism',
+    description: 'Hybrid fee model aligns DAO revenue with protocol sustainability through 40/60 split.',
+    color: '#10b981',
+    steps: [
+      {
+        title: 'Listing Fee Split',
+        description: 'Protocol pays listing fee split into immediate (40%) and accrued (60%) portions.',
+        icon: <Coins className="w-6 h-6" />,
+        details: ['40% goes to DAO treasury immediately', '60% earned over time via trading fees', 'Transparent Fee Splitter contract']
+      },
+      {
+        title: 'Trading Fee Distribution',
+        description: 'LPs earn 100% of trading fees, with 60% diverted to DAO until accrued portion is covered.',
+        icon: <TrendingUp className="w-6 h-6" />,
+        details: ['LPs receive full trading fee revenue', '60% of fees go to DAO (vested)', 'Continuous yield stream']
+      },
+      {
+        title: 'Vault Expiration',
+        description: 'When vault expires, any remaining accrued fees are returned to the protocol.',
+        icon: <Activity className="w-6 h-6" />,
+        details: ['Unused collateral refunded', 'Residual fees returned to protocol', 'Clean settlement']
+      },
+      {
+        title: 'Fee Summary',
+        description: 'Full transparency into all fee flows and revenue distribution.',
+        icon: <BarChart3 className="w-6 h-6" />,
+        details: ['Real-time fee breakdown', 'Historical revenue tracking', 'Audit trail on-chain']
+      }
+    ]
+  }
+};
+
+const FlowWalkthrough = () => {
+  const [activeFlow, setActiveFlow] = useState<FlowType>('deposit');
+  const [currentStep, setCurrentStep] = useState(0);
+  const flow = flows[activeFlow];
+
+  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, flow.steps.length - 1));
+  const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
+
+  return (
+    <section className="py-24 px-6 bg-[#0A0B10]">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Interactive Protocol Flows</h2>
+          <p className="text-slate-400 max-w-2xl mx-auto">Step through each protocol flow to understand how Conduir separates IL risk from liquidity provision.</p>
+        </div>
+
+        {/* Flow Selector */}
+        <div className="flex flex-wrap justify-center gap-4 mb-12">
+          {(
+            [
+              { key: 'deposit' as FlowType, label: 'LP Deposit', icon: <Wallet className="w-5 h-5" /> },
+              { key: 'voucher' as FlowType, label: 'IL Voucher', icon: <Layers className="w-5 h-5" /> },
+              { key: 'fees' as FlowType, label: 'Fee Collection', icon: <Coins className="w-5 h-5" /> }
+            ]
+          ).map((flowBtn) => (
+            <button
+              key={flowBtn.key}
+              onClick={() => { setActiveFlow(flowBtn.key); setCurrentStep(0); }}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${
+                activeFlow === flowBtn.key
+                  ? 'shadow-lg scale-105'
+                  : 'bg-[#13141C] border border-white/10 text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
+              style={{
+                backgroundColor: activeFlow === flowBtn.key ? flow.color : undefined,
+                color: activeFlow === flowBtn.key ? '#fff' : undefined
+              }}
+            >
+              {flowBtn.icon}
+              {flowBtn.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Flow Display */}
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Steps Navigation */}
+          <div className="lg:col-span-1">
+            <div className="bg-[#13141C] border border-white/10 rounded-2xl p-6">
+              <h3 className="text-lg font-bold mb-6">Flow Steps</h3>
+              <div className="space-y-2">
+                {flow.steps.map((step, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentStep(index)}
+                    className={`w-full text-left p-4 rounded-xl transition-all ${
+                      currentStep === index
+                        ? 'border-2'
+                        : 'border border-white/5 hover:border-white/20'
+                    }`}
+                    style={{
+                      borderColor: currentStep === index ? flow.color : undefined,
+                      backgroundColor: currentStep === index ? `${flow.color}10` : undefined
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
+                        currentStep === index ? 'text-white' : 'text-slate-500'
+                      }`}
+                      style={{
+                        backgroundColor: currentStep === index ? flow.color : 'rgba(255,255,255,0.05)'
+                      }}
+                      >
+                        {index + 1}
+                      </div>
+                      <span className={`text-sm font-medium ${currentStep === index ? 'text-white' : 'text-slate-400'}`}>
+                        {step.title}
+                      </span>
+                      {index < currentStep && (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto" />
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Step Detail */}
+          <div className="lg:col-span-2">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`${activeFlow}-${currentStep}`}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="bg-[#13141C] border border-white/10 rounded-2xl p-8 h-full"
+              >
+                <div className="flex items-start gap-6 mb-8">
+                  <div
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: `${flow.color}20` }}
+                  >
+                    <div style={{ color: flow.color }}>
+                      {flow.steps[currentStep].icon}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium mb-2" style={{ color: flow.color }}>
+                      Step {currentStep + 1} of {flow.steps.length}
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3">{flow.steps[currentStep].title}</h3>
+                    <p className="text-slate-400 leading-relaxed">{flow.steps[currentStep].description}</p>
+                  </div>
+                </div>
+
+                {flow.steps[currentStep].details && (
+                  <div className="bg-[#0A0B10] rounded-xl p-6 mb-8">
+                    <h4 className="text-sm font-semibold text-slate-400 mb-4">Key Details</h4>
+                    <ul className="space-y-3">
+                      {flow.steps[currentStep].details?.map((detail, i) => (
+                        <li key={i} className="flex items-center gap-3 text-slate-300">
+                          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: flow.color }} />
+                          {detail}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Progress Bar */}
+                <div className="mb-6">
+                  <div className="flex justify-between text-xs text-slate-500 mb-2">
+                    <span>Progress</span>
+                    <span>{Math.round((currentStep + 1) / flow.steps.length * 100)}%</span>
+                  </div>
+                  <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: flow.color }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(currentStep + 1) / flow.steps.length * 100}%` }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </div>
+                </div>
+
+                {/* Navigation */}
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={prevStep}
+                    disabled={currentStep === 0}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/5 text-slate-400 hover:text-white"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Previous
+                  </button>
+
+                  {currentStep === flow.steps.length - 1 ? (
+                    <Link
+                      to="/app"
+                      className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-white transition-all hover:scale-105"
+                      style={{ backgroundColor: flow.color }}
+                    >
+                      Try in dApp <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={nextStep}
+                      className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-white transition-all hover:scale-105"
+                      style={{ backgroundColor: flow.color }}
+                    >
+                      Next Step <ArrowRight className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 export default function Home() {
   return (
     <div>
@@ -263,6 +555,7 @@ export default function Home() {
       <Solution />
       <DualValue />
       <DashboardPreview />
+      <FlowWalkthrough />
     </div>
   );
 }
