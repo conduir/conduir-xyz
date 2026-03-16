@@ -1,5 +1,94 @@
-import React, { InputHTMLAttributes, forwardRef, SelectHTMLAttributes } from 'react';
+import React, { InputHTMLAttributes, forwardRef, SelectHTMLAttributes, ButtonHTMLAttributes } from 'react';
 import { Maximize2 } from 'lucide-react';
+
+function cn(...classes: (string | boolean | undefined | null)[]) {
+  return classes.filter(Boolean).join(' ');
+}
+
+/* ========================================
+   Button Components
+   ======================================== */
+
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'info' | 'warning';
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export function Button({
+  children,
+  variant = 'primary',
+  size = 'md',
+  className = '',
+  disabled = false,
+  ...props
+}: ButtonProps) {
+  const baseStyle = "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10]";
+
+  const variants = {
+    primary: "bg-[#E6007A] hover:bg-[#C20066] text-white",
+    secondary: "bg-white/5 hover:bg-white/10 text-white border border-white/10",
+    ghost: "text-slate-400 hover:text-white hover:bg-white/5",
+    danger: "bg-[#EF4444] hover:bg-[#DC2626] text-white",
+    success: "bg-[#22C55E] hover:bg-[#16A34A] text-white",
+    info: "bg-[#3B82F6] hover:bg-[#2563EB] text-white",
+    warning: "bg-[#F59E0B] hover:bg-[#D97706] text-white",
+  };
+
+  const sizes = {
+    sm: "px-3 py-1.5 text-sm rounded-lg",
+    md: "px-4 py-3 text-sm rounded-xl",
+    lg: "px-6 py-3.5 text-base rounded-xl",
+  };
+
+  return (
+    <button
+      className={cn(baseStyle, variants[variant], sizes[size], className)}
+      disabled={disabled}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'ghost' | 'secondary';
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export function IconButton({
+  children,
+  variant = 'ghost',
+  size = 'md',
+  className = '',
+  ...props
+}: IconButtonProps) {
+  const baseStyle = "inline-flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10] rounded-lg";
+
+  const sizes = {
+    sm: "p-1.5",
+    md: "p-2",
+    lg: "p-2.5",
+  };
+
+  const variants = {
+    ghost: "text-slate-400 hover:text-white hover:bg-white/5",
+    secondary: "text-slate-400 bg-white/5 hover:bg-white/10",
+  };
+
+  return (
+    <button
+      className={cn(baseStyle, sizes[size], variants[variant], className)}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+/* ========================================
+   Input Components
+   ======================================== */
 
 interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label?: string;
@@ -10,7 +99,10 @@ interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'>
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, size = 'md', showMaxButton, onMaxClick, className = '', ...props }, ref) => {
+  ({ label, error, size = 'md', showMaxButton, onMaxClick, className = '', id, ...props }, ref) => {
+    const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+    const errorId = `${inputId}-error`;
+
     const sizeClasses = {
       sm: 'px-3 py-2 text-sm',
       md: 'px-4 py-3 text-sm',
@@ -20,16 +112,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-slate-400 mb-2">
+          <label htmlFor={inputId} className="block text-sm font-medium text-slate-300 mb-2">
             {label}
           </label>
         )}
         <div className="relative">
           <input
             ref={ref}
+            id={inputId}
+            aria-invalid={!!error}
+            aria-describedby={error ? errorId : undefined}
             className={`
               w-full bg-[#0A0B10] border rounded-xl text-white placeholder:text-slate-500
-              focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 transition-all
+              focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10] transition-all
               disabled:opacity-50 disabled:cursor-not-allowed
               ${sizeClasses[size]}
               ${error ? 'border-red-500/50' : 'border-white/10'}
@@ -42,14 +137,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={onMaxClick}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-[#E6007A] bg-[#E6007A]/10 hover:bg-[#E6007A]/20 px-2 py-1 rounded transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-[#E6007A] bg-[#E6007A]/10 hover:bg-[#E6007A]/20 px-2 py-1 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50"
             >
               MAX
             </button>
           )}
         </div>
         {error && (
-          <p className="text-red-400 text-sm mt-2">{error}</p>
+          <p id={errorId} className="text-red-400 text-sm mt-2">{error}</p>
         )}
       </div>
     );
@@ -65,19 +160,25 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, className = '', ...props }, ref) => {
+  ({ label, error, options, className = '', id, ...props }, ref) => {
+    const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
+    const errorId = `${selectId}-error`;
+
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-slate-400 mb-2">
+          <label htmlFor={selectId} className="block text-sm font-medium text-slate-300 mb-2">
             {label}
           </label>
         )}
         <select
           ref={ref}
+          id={selectId}
+          aria-invalid={!!error}
+          aria-describedby={error ? errorId : undefined}
           className={`
             w-full bg-[#0A0B10] border rounded-xl px-4 py-3 text-white
-            focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 transition-all
+            focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10] transition-all
             disabled:opacity-50 disabled:cursor-not-allowed
             ${error ? 'border-red-500/50' : 'border-white/10'}
             ${className}
@@ -91,7 +192,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ))}
         </select>
         {error && (
-          <p className="text-red-400 text-sm mt-2">{error}</p>
+          <p id={errorId} className="text-red-400 text-sm mt-2">{error}</p>
         )}
       </div>
     );
@@ -109,20 +210,26 @@ interface AmountInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, '
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ label, error, balance, symbol, onMaxClick, className = '', ...props }, ref) => {
+  ({ label, error, balance, symbol, onMaxClick, className = '', id, ...props }, ref) => {
+    const inputId = id || `amount-input-${Math.random().toString(36).substr(2, 9)}`;
+    const errorId = `${inputId}-error`;
+
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-slate-400 mb-2">
+          <label htmlFor={inputId} className="block text-sm font-medium text-slate-300 mb-2">
             {label}
           </label>
         )}
         <div className="relative">
           <input
             ref={ref}
+            id={inputId}
+            aria-invalid={!!error}
+            aria-describedby={error ? errorId : undefined}
             className={`
-              w-full bg-[#0A0B10] border rounded-xl pl-4 pr-24 py-3 text-white
-              placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50
+              w-full bg-[#0A0B10] border rounded-xl px-4 py-3 pr-24 text-white
+              placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10]
               transition-all disabled:opacity-50 disabled:cursor-not-allowed
               ${error ? 'border-red-500/50' : 'border-white/10'}
               ${className}
@@ -137,21 +244,23 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
               <button
                 type="button"
                 onClick={onMaxClick}
-                className="text-xs font-bold text-[#E6007A] bg-[#E6007A]/10 hover:bg-[#E6007A]/20 px-2 py-1 rounded transition-colors"
+                className="text-xs font-bold text-[#E6007A] bg-[#E6007A]/10 hover:bg-[#E6007A]/20 px-2 py-1 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50"
               >
                 MAX
               </button>
             )}
           </div>
         </div>
-        {balance !== undefined && (
-          <div className="flex justify-between items-center mt-2">
-            {error && <p className="text-red-400 text-sm">{error}</p>}
+        <div className="flex justify-between items-center mt-2">
+          {error && (
+            <p id={errorId} className="text-red-400 text-sm">{error}</p>
+          )}
+          {!error && balance !== undefined && (
             <p className="text-slate-500 text-sm ml-auto">
               Balance: <span className="text-slate-300">{balance}</span>
             </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     );
   }

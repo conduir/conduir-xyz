@@ -1,6 +1,14 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { CheckCircle2, Copy, ExternalLink, ArrowRight } from 'lucide-react';
+import { Button, IconButton } from './FormInputs';
+
+/**
+ * Get explorer URL for transaction
+ */
+function getExplorerUrl(hash: string): string {
+  return `https://explorer.polkadot.io/tx/${hash}`;
+}
 
 interface SuccessViewProps {
   title: string;
@@ -28,6 +36,9 @@ export function SuccessView({
       navigator.clipboard.writeText(txHash);
     }
   };
+
+  // Generate explorer URL if txHash is provided and actionHref is not
+  const explorerUrl = actionHref || (txHash ? getExplorerUrl(txHash) : undefined);
 
   return (
     <motion.div
@@ -57,19 +68,20 @@ export function SuccessView({
             <code className="text-sm text-slate-300 truncate flex-1 text-left">
               {txHash}
             </code>
-            <button
+            <IconButton
               onClick={copyTxHash}
-              className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+              variant="ghost"
+              size="md"
               title="Copy to clipboard"
             >
-              <Copy className="w-4 h-4 text-slate-400" />
-            </button>
-            {actionHref && (
+              <Copy className="w-4 h-4" />
+            </IconButton>
+            {explorerUrl && (
               <a
-                href={actionHref}
+                href={explorerUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                className="p-2 hover:bg-white/5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50"
                 title="View in explorer"
               >
                 <ExternalLink className="w-4 h-4 text-slate-400" />
@@ -97,28 +109,30 @@ export function SuccessView({
       {/* Actions */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
         {onViewDetails && (
-          <button
+          <Button
+            variant="secondary"
             onClick={onViewDetails}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium transition-colors"
+            className="w-full sm:w-auto"
           >
             View Details
-          </button>
+          </Button>
         )}
         {onNewAction && (
-          <button
+          <Button
+            variant="primary"
             onClick={onNewAction}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#E6007A] hover:bg-[#C20066] text-white font-medium transition-colors flex items-center justify-center gap-2"
+            className="w-full sm:w-auto"
           >
             {actionLabel === 'View in Explorer' ? 'New Transaction' : actionLabel}
             <ArrowRight className="w-4 h-4" />
-          </button>
+          </Button>
         )}
-        {actionHref && !onNewAction && (
+        {explorerUrl && !onNewAction && (
           <a
-            href={actionHref}
+            href={explorerUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#E6007A] hover:bg-[#C20066] text-white font-medium transition-colors flex items-center justify-center gap-2"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#E6007A] hover:bg-[#C20066] text-white font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10] w-full sm:w-auto"
           >
             {actionLabel}
             <ExternalLink className="w-4 h-4" />

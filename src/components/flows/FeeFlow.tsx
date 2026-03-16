@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { TrendingUp, Calendar, DollarSign, PieChart as PieChartIcon, Coins, ArrowUpRight } from 'lucide-react';
 import { useFeeFlow } from '../../hooks/useFeeFlow';
-import { Modal } from '../ui';
+import { Modal, Button } from '../ui';
 
 interface FeeFlowProps {
   isOpen: boolean;
@@ -129,7 +129,7 @@ export function FeeFlow({ isOpen, onClose }: FeeFlowProps) {
             type="number"
             value={listingFeeInput}
             onChange={(e) => setListingFeeInput(e.target.value)}
-            className="w-full bg-[#13141C] border border-white/10 rounded-xl px-4 py-4 text-white text-lg focus:outline-none focus:border-[#E6007A]/50 transition-colors"
+            className="w-full bg-[#0A0B10] border border-white/10 rounded-xl px-4 py-4 text-white text-lg focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10] transition-all"
           />
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500">USDC</span>
         </div>
@@ -273,7 +273,7 @@ export function FeeFlow({ isOpen, onClose }: FeeFlowProps) {
           <button
             key={tab.key}
             onClick={() => actions.setView(tab.key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#13141C] ${
               state.view === tab.key
                 ? 'bg-[#E6007A] text-white'
                 : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
@@ -291,7 +291,7 @@ export function FeeFlow({ isOpen, onClose }: FeeFlowProps) {
           <button
             key={range}
             onClick={() => actions.setTimeRange(range)}
-            className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+            className={`px-3 py-1 rounded text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#13141C] ${
               state.timeRange === range
                 ? 'bg-white/10 text-white'
                 : 'text-slate-500 hover:text-white'

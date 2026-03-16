@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
+import { Button, IconButton } from './FormInputs';
 
 export interface ConfirmDialogProps {
   isOpen: boolean;
@@ -20,21 +21,25 @@ const variantStyles = {
     icon: <AlertTriangle className="w-6 h-6 text-red-500" />,
     confirmBg: 'bg-red-500 hover:bg-red-600',
     border: 'border-red-500/20',
+    variant: 'danger' as const,
   },
   warning: {
     icon: <AlertTriangle className="w-6 h-6 text-orange-500" />,
     confirmBg: 'bg-orange-500 hover:bg-orange-600',
     border: 'border-orange-500/20',
+    variant: 'warning' as const,
   },
   info: {
     icon: <Info className="w-6 h-6 text-blue-500" />,
     confirmBg: 'bg-blue-500 hover:bg-blue-600',
     border: 'border-blue-500/20',
+    variant: 'info' as const,
   },
   success: {
     icon: <CheckCircle className="w-6 h-6 text-emerald-500" />,
     confirmBg: 'bg-emerald-500 hover:bg-emerald-600',
     border: 'border-emerald-500/20',
+    variant: 'success' as const,
   },
 };
 
@@ -63,7 +68,7 @@ export function ConfirmDialog({
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-[#13141C] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl"
+        className="bg-[#13141C] border border-white/10 rounded-xl w-full max-w-md shadow-2xl"
       >
         <div className="p-6">
           <div className="flex items-start gap-4 mb-6">
@@ -74,13 +79,14 @@ export function ConfirmDialog({
               <h3 className="text-lg font-bold mb-2">{title}</h3>
               <p className="text-slate-400 text-sm leading-relaxed">{message}</p>
             </div>
-            <button
+            <IconButton
               onClick={onClose}
               disabled={isSubmitting}
-              className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors disabled:opacity-50"
+              variant="secondary"
+              size="md"
             >
-              <X className="w-4 h-4 text-slate-400" />
-            </button>
+              <X className="w-4 h-4" />
+            </IconButton>
           </div>
 
           {details && (
@@ -95,27 +101,28 @@ export function ConfirmDialog({
           )}
 
           <div className="flex gap-3">
-            <button
+            <Button
+              variant="secondary"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors disabled:opacity-50"
+              className="flex-1"
             >
               {cancelLabel}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant={styles.variant}
               onClick={handleConfirm}
               disabled={isSubmitting}
-              className={`flex-1 px-4 py-3 rounded-xl ${styles.confirmBg} text-white font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2`}
+              className="flex-1"
             >
               {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Processing...
                 </>
               ) : (
                 confirmLabel
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </motion.div>

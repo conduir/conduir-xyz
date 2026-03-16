@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
+import { IconButton } from './FormInputs';
 
 interface ModalProps {
   isOpen: boolean;
@@ -54,18 +55,19 @@ export function Modal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className={`bg-[#13141C] border border-white/10 rounded-2xl w-full ${sizeClasses[size]} shadow-2xl max-h-[90vh] overflow-hidden flex flex-col`}
+              className={`bg-[#13141C] border border-white/10 rounded-xl w-full ${sizeClasses[size]} shadow-2xl max-h-[90vh] overflow-hidden flex flex-col`}
             >
               {(title || showCloseButton) && (
                 <div className="flex items-center justify-between p-6 border-b border-white/10">
                   {title && <h2 className="text-xl font-bold">{title}</h2>}
                   {showCloseButton && (
-                    <button
+                    <IconButton
                       onClick={onClose}
-                      className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+                      variant="secondary"
+                      size="md"
                     >
-                      <X className="w-4 h-4 text-slate-400" />
-                    </button>
+                      <X className="w-4 h-4" />
+                    </IconButton>
                   )}
                 </div>
               )}

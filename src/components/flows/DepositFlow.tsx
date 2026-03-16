@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, Wallet, TrendingUp, Shield, Layers, ChevronLeft, CheckCircle2 } from 'lucide-react';
 import { useDepositFlow, Asset, Vault } from '../../hooks/useDepositFlow';
-import { Modal, ConfirmDialog, SuccessView, Input } from '../ui';
+import { Modal, ConfirmDialog, SuccessView, Input, Button, LoadingSpinner } from '../ui';
 
 interface DepositFlowProps {
   isOpen: boolean;
@@ -33,7 +33,7 @@ export function DepositFlow({ isOpen, onClose }: DepositFlowProps) {
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             onClick={() => actions.selectAsset(asset)}
-            className="bg-[#0A0B10] border border-white/10 hover:border-[#E6007A]/50 rounded-xl p-4 text-left transition-all flex items-center justify-between group"
+            className="bg-[#0A0B10] border border-white/10 hover:border-[#E6007A]/50 rounded-xl p-4 text-left transition-all flex items-center justify-between group focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10]"
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
@@ -89,7 +89,7 @@ export function DepositFlow({ isOpen, onClose }: DepositFlowProps) {
                 <span className="text-slate-400">{state.selectedAsset?.symbol}</span>
                 <button
                   onClick={actions.setMaxAmount}
-                  className="text-xs font-bold text-[#E6007A] bg-[#E6007A]/10 hover:bg-[#E6007A]/20 px-3 py-1.5 rounded-lg transition-colors"
+                  className="text-xs font-bold text-[#E6007A] bg-[#E6007A]/10 hover:bg-[#E6007A]/20 px-3 py-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50"
                 >
                   MAX
                 </button>
@@ -112,7 +112,7 @@ export function DepositFlow({ isOpen, onClose }: DepositFlowProps) {
                 <button
                   key={vault.id}
                   onClick={() => actions.selectVault(vault)}
-                  className={`w-full text-left rounded-xl p-4 border transition-all ${
+                  className={`w-full text-left rounded-xl p-4 border transition-all focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10] ${
                     state.selectedVault?.id === vault.id
                       ? 'border-[#E6007A] bg-[#E6007A]/5'
                       : 'border-white/10 hover:border-white/20 bg-[#0A0B10]'
@@ -161,19 +161,21 @@ export function DepositFlow({ isOpen, onClose }: DepositFlowProps) {
         </div>
 
         <div className="flex gap-3 mt-6">
-          <button
+          <Button
+            variant="secondary"
             onClick={() => actions.goToStep('select')}
-            className="flex-1 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors"
+            className="flex-1"
           >
             Back
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
             onClick={() => actions.goToStep('confirm')}
             disabled={!state.amount || !state.selectedVault}
-            className="flex-1 px-4 py-3 rounded-xl bg-[#E6007A] hover:bg-[#C20066] text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1"
           >
             Review Deposit <ArrowRight className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -221,14 +223,16 @@ export function DepositFlow({ isOpen, onClose }: DepositFlowProps) {
         </p>
       </div>
 
-      <button
+      <Button
+        variant="primary"
         onClick={actions.confirmDeposit}
         disabled={state.isSubmitting}
-        className="w-full px-6 py-4 rounded-xl bg-[#E6007A] hover:bg-[#C20066] text-white font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full"
+        size="lg"
       >
         {state.isSubmitting ? (
           <>
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <LoadingSpinner size="sm" />
             Processing...
           </>
         ) : (
@@ -237,7 +241,7 @@ export function DepositFlow({ isOpen, onClose }: DepositFlowProps) {
             Propose Deposit via Safe
           </>
         )}
-      </button>
+      </Button>
     </div>
   );
 

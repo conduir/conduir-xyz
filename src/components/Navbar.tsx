@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight, Layers, BookOpen } from 'lucide-react';
+import { WalletButton } from './web3/WalletButton';
+import { Button } from './ui';
 
 export default function Navbar() {
   const location = useLocation();
@@ -34,19 +36,26 @@ export default function Navbar() {
           <span className="font-display font-bold text-xl tracking-tight">Conduir</span>
         </Link>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
-          <a href="#problem" onClick={(e) => handleScroll(e, 'problem')} className="hover:text-white transition-colors cursor-pointer">The Problem</a>
-          <a href="#solution" onClick={(e) => handleScroll(e, 'solution')} className="hover:text-white transition-colors cursor-pointer">How it Works</a>
-          <a href="#benefits" onClick={(e) => handleScroll(e, 'benefits')} className="hover:text-white transition-colors cursor-pointer">Benefits</a>
-          <a href="#dashboard" onClick={(e) => handleScroll(e, 'dashboard')} className="hover:text-white transition-colors cursor-pointer">App Preview</a>
+          <a href="#problem" onClick={(e) => handleScroll(e, 'problem')} className="hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 rounded px-2 py-1">The Problem</a>
+          <a href="#solution" onClick={(e) => handleScroll(e, 'solution')} className="hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 rounded px-2 py-1">How it Works</a>
+          <a href="#benefits" onClick={(e) => handleScroll(e, 'benefits')} className="hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 rounded px-2 py-1">Benefits</a>
+          <a href="#dashboard" onClick={(e) => handleScroll(e, 'dashboard')} className="hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 rounded px-2 py-1">App Preview</a>
         </div>
         <div className="flex items-center gap-4">
-          <Link to="/docs" className="hidden md:flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
+          <Link to="/docs" className="hidden md:flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 rounded px-2 py-1">
             <BookOpen className="w-4 h-4" />
             Docs
           </Link>
-          <Link to="/app" className="bg-white text-black px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-slate-200 transition-colors flex items-center gap-2">
-            Launch dApp <ArrowRight className="w-4 h-4" />
-          </Link>
+          {location.pathname === '/app' ? (
+            <WalletButton />
+          ) : (
+            <Link
+              to="/app"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-white text-black hover:bg-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10]/80"
+            >
+              Launch dApp <ArrowRight className="w-4 h-4" />
+            </Link>
+          )}
         </div>
       </div>
     </nav>

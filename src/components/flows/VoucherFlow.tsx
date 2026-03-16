@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ArrowRight, FileText, Layers, Shield, CheckCircle2, Clock, ExternalLink } from 'lucide-react';
 import { useVoucherFlow, Voucher } from '../../hooks/useVoucherFlow';
-import { Modal, Input, Select, SuccessView } from '../ui';
+import { Modal, Input, Select, SuccessView, Button, LoadingSpinner } from '../ui';
 
 interface VoucherFlowProps {
   isOpen: boolean;
@@ -62,7 +62,7 @@ export function VoucherFlow({ isOpen, onClose, initialTab = 'list' }: VoucherFlo
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             onClick={() => actions.selectVoucher(voucher)}
-            className="w-full bg-[#0A0B10] border border-white/10 hover:border-white/20 rounded-xl p-4 text-left transition-all"
+            className="w-full bg-[#0A0B10] border border-white/10 hover:border-white/20 rounded-xl p-4 text-left transition-all focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10]"
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
@@ -90,13 +90,14 @@ export function VoucherFlow({ isOpen, onClose, initialTab = 'list' }: VoucherFlo
         ))}
       </div>
 
-      <button
+      <Button
+        variant="info"
         onClick={actions.startRegistration}
-        className="w-full px-4 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors flex items-center justify-center gap-2"
+        className="w-full"
       >
         <FileText className="w-4 h-4" />
         Register New Vault
-      </button>
+      </Button>
     </div>
   );
 
@@ -165,19 +166,21 @@ export function VoucherFlow({ isOpen, onClose, initialTab = 'list' }: VoucherFlo
         </div>
 
         <div className="flex gap-3 mt-6">
-          <button
+          <Button
+            variant="secondary"
             onClick={() => actions.goToStep('list')}
-            className="flex-1 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors"
+            className="flex-1"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="info"
             onClick={() => actions.goToStep('confirm')}
             disabled={!registration?.targetPair || !registration?.collateralToken || !registration?.collateralAmount}
-            className="flex-1 px-4 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1"
           >
             Review Registration <ArrowRight className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -228,14 +231,16 @@ export function VoucherFlow({ isOpen, onClose, initialTab = 'list' }: VoucherFlo
           </p>
         </div>
 
-        <button
+        <Button
+          variant="info"
           onClick={actions.confirmRegistration}
           disabled={state.isSubmitting}
-          className="w-full px-6 py-4 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full"
+          size="lg"
         >
           {state.isSubmitting ? (
             <>
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <LoadingSpinner size="sm" />
               Processing...
             </>
           ) : (
@@ -244,7 +249,7 @@ export function VoucherFlow({ isOpen, onClose, initialTab = 'list' }: VoucherFlo
               Propose Registration via Safe
             </>
           )}
-        </button>
+        </Button>
       </div>
     );
   };
@@ -318,15 +323,15 @@ export function VoucherFlow({ isOpen, onClose, initialTab = 'list' }: VoucherFlo
         <div className="flex gap-3 mt-6">
           <a
             href="#"
-            className="flex-1 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium transition-colors flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium transition-colors flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10]"
           >
             <ExternalLink className="w-4 h-4" />
             View on Explorer
           </a>
           {voucher.status === 'Active' && (
-            <button className="flex-1 px-4 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors">
+            <Button variant="info" className="flex-1">
               Trade Voucher
-            </button>
+            </Button>
           )}
         </div>
       </div>

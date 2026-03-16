@@ -1,11 +1,13 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { WagmiProvider } from './web3/providers/WagmiProvider';
+import { TransactionQueue } from './components/web3/TransactionQueue';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Docs from './pages/Docs';
 
-export default function App() {
+function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
@@ -16,5 +18,14 @@ export default function App() {
         </Route>
       </Routes>
     </BrowserRouter>
+  );
+}
+
+export default function App() {
+  return (
+    <WagmiProvider>
+      <TransactionQueue />
+      <AppRoutes />
+    </WagmiProvider>
   );
 }
