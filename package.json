@@ -12,10 +12,14 @@
     "dao",
     "yield",
     "amm",
-    "dex"
+    "dex",
+    "ai",
+    "predictions"
   ],
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
+    "dev:server": "cd server && npm run dev",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
@@ -39,6 +43,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.1.2",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",

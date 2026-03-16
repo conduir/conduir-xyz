@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, Wallet, TrendingUp, Shield, Layers, ChevronLeft, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Wallet, TrendingUp, Shield, Layers, ChevronLeft, CheckCircle2, Sparkles } from 'lucide-react';
 import { useDepositFlow, Asset, Vault } from '../../hooks/useDepositFlow';
 import { Modal, ConfirmDialog, SuccessView, Input } from '../ui';
+import { AIRecommendationBadge } from '../AIRecommendationBadge';
 
 interface DepositFlowProps {
   isOpen: boolean;
@@ -10,7 +11,7 @@ interface DepositFlowProps {
 }
 
 export function DepositFlow({ isOpen, onClose }: DepositFlowProps) {
-  const { state, actions } = useDepositFlow();
+  const { state, actions, ai } = useDepositFlow();
 
   // Reset when modal closes
   useEffect(() => {
@@ -57,6 +58,14 @@ export function DepositFlow({ isOpen, onClose }: DepositFlowProps) {
   const renderAmount = () => {
     const availableVaults = state.selectedAsset ? actions.getAvailableVaults(state.selectedAsset.symbol) : [];
     const estimatedYield = actions.getEstimatedYield();
+    const topVault = state.selectedAsset ? actions.getTopVaultForAsset(state.selectedAsset.symbol) : null;
+
+    // Auto-select top recommended vault if none selected
+    useEffect(() => {
+      if (!state.selectedVault && topVault && state.selectedAsset) {
+        actions.selectVault(topVault);
+      }
+    }, [topVault, state.selectedVault, state.selectedAsset, actions]);
 
     return (
       <div>
@@ -71,6 +80,17 @@ export function DepositFlow({ isOpen, onClose }: DepositFlowProps) {
         <p className="text-slate-400 mb-6">
           Depositing {state.selectedAsset?.symbol} into a vault for IL-protected yield.
         </p>
+
+        {/* AI Recommendation Banner */}
+        {ai.predictions?.topRecommendation && availableVaults.some(
+          v => v.id === ai.predictions?.topRecommendation?.vaultId
+        ) && (
+          <AIRecommendationBadge
+            prediction={ai.predictions.topRecommendation}
+            variant="compact"
+            className="mb-4"
+          />
+        )}
 
         <div className="space-y-6">
           <div>
@@ -108,48 +128,69 @@ export function DepositFlow({ isOpen, onClose }: DepositFlowProps) {
               Select Vault
             </label>
             <div className="space-y-3">
-              {availableVaults.map((vault) => (
-                <button
-                  key={vault.id}
-                  onClick={() => actions.selectVault(vault)}
-                  className={`w-full text-left rounded-xl p-4 border transition-all ${
-                    state.selectedVault?.id === vault.id
-                      ? 'border-[#E6007A] bg-[#E6007A]/5'
-                      : 'border-white/10 hover:border-white/20 bg-[#0A0B10]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
-                        <Layers className="w-5 h-5 text-[#E6007A]" />
+              {availableVaults.map((vault) => {
+                const prediction = actions.getVaultPrediction(vault.id);
+                const isTopPick = ai.predictions?.topRecommendation?.vaultId === vault.id;
+
+                return (
+                  <button
+                    key={vault.id}
+                    onClick={() => actions.selectVault(vault)}
+                    className={`w-full text-left rounded-xl p-4 border transition-all relative ${
+                      state.selectedVault?.id === vault.id
+                        ? 'border-[#E6007A] bg-[#E6007A]/5'
+                        : 'border-white/10 hover:border-white/20 bg-[#0A0B10]'
+                    }`}
+                  >
+                    {isTopPick && (
+                      <div className="absolute top-2 right-2">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                          <Sparkles className="w-3 h-3 text-purple-400" />
+                          <span className="text-xs font-medium text-purple-400">AI Pick</span>
+                        </span>
                       </div>
-                      <div>
-                        <div className="font-bold">{vault.protocol}</div>
-                        <div className="text-xs text-slate-500">Single-sided {vault.asset}</div>
+                    )}
+
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
+                          <Layers className="w-5 h-5 text-[#E6007A]" />
+                        </div>
+                        <div>
+                          <div className="font-bold">{vault.protocol}</div>
+                          <div className="text-xs text-slate-500">Single-sided {vault.asset}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-emerald-400 font-bold">{vault.apy}% APY</div>
+                        {prediction && (
+                          <div className="text-xs text-slate-500">
+                            → {prediction.predictions.days30}% predicted
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <div className="text-emerald-400 font-bold">{vault.apy}% APY</div>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="text-slate-500">
-                      Capacity: ${(vault.capacity / 1000000).toFixed(1)}M
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="text-slate-500">
+                        Capacity: ${(vault.capacity / 1000000).toFixed(1)}M
+                      </div>
+                      <div className="text-slate-500">
+                        Risk: <span className={`font-medium ${
+                          vault.riskLevel === 'Low' ? 'text-emerald-400' :
+                          vault.riskLevel === 'Medium' ? 'text-orange-400' :
+                          'text-red-400'
+                        }`}>{vault.riskLevel}</span>
+                      </div>
                     </div>
-                    <div className="text-slate-500">
-                      Risk: <span className={`font-medium ${
-                        vault.riskLevel === 'Low' ? 'text-emerald-400' :
-                        vault.riskLevel === 'Medium' ? 'text-orange-400' :
-                        'text-red-400'
-                      }`}>{vault.riskLevel}</span>
+                    <div className="mt-2 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#E6007A] to-purple-500"
+                        style={{ width: `${(vault.utilized / vault.capacity) * 100}%` }}
+                      />
                     </div>
-                  </div>
-                  <div className="mt-2 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-[#E6007A] to-purple-500"
-                      style={{ width: `${(vault.utilized / vault.capacity) * 100}%` }}
-                    />
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

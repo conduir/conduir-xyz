@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import type { PredictionResponse, YieldPrediction } from '../types/ai';
 
 export interface Asset {
   symbol: string;
@@ -50,6 +51,69 @@ export function useDepositFlow() {
     error: null,
     receiptTxHash: null,
   });
+
+  // AI predictions state
+  const [predictions, setPredictions] = useState<PredictionResponse | null>(null);
+  const [predictionsLoading, setPredictionsLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+  // Fetch AI predictions for available vaults
+  const fetchAIPredictions = useCallback(async (assetVaults?: Vault[]) => {
+    setPredictionsLoading(true);
+    setAiError(null);
+
+    try {
+      const vaultsToFetch = assetVaults || mockVaults;
+      const response = await fetch(`${API_BASE_URL}/api/predictions/yield`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vaults: vaultsToFetch }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data: PredictionResponse = await response.json();
+      setPredictions(data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch AI predictions';
+      setAiError(message);
+      console.error('AI predictions fetch error:', err);
+    } finally {
+      setPredictionsLoading(false);
+    }
+  }, [API_BASE_URL]);
+
+  // Get AI recommendation for a specific vault
+  const getVaultPrediction = useCallback((vaultId: string): YieldPrediction | undefined => {
+    return predictions?.predictions.find(p => p.vaultId === vaultId);
+  }, [predictions]);
+
+  // Get top recommended vault for an asset
+  const getTopVaultForAsset = useCallback((assetSymbol: string): Vault | null => {
+    const assetVaults = mockVaults.filter(v => v.asset === assetSymbol);
+    if (!predictions?.predictions) return assetVaults[0] || null;
+
+    const assetPredictions = predictions.predictions.filter(p =>
+      assetVaults.some(v => v.id === p.vaultId)
+    );
+
+    if (assetPredictions.length === 0) return assetVaults[0] || null;
+
+    const topPrediction = assetPredictions
+      .filter(p => p.confidence === 'High' || p.confidence === 'Medium')
+      .sort((a, b) => b.predictions.days30 - a.predictions.days30)[0];
+
+    return topPrediction?.vault || assetVaults[0] || null;
+  }, [predictions]);
+
+  // Auto-fetch predictions on mount
+  useEffect(() => {
+    fetchAIPredictions();
+  }, [fetchAIPredictions]);
 
   const reset = useCallback(() => {
     setState({
@@ -157,6 +221,14 @@ export function useDepositFlow() {
       getAvailableVaults,
       getAssets,
       getEstimatedYield,
+      fetchAIPredictions,
+      getVaultPrediction,
+      getTopVaultForAsset,
+    },
+    ai: {
+      predictions,
+      predictionsLoading,
+      aiError,
     },
   };
 }

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { Wallet, BarChart3, ArrowRight, Shield, Layers, History, Settings, Bell, Search, ShieldCheck, FileSignature, Clock, CheckCircle2, TrendingUp, Coins, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Wallet, BarChart3, ArrowRight, Shield, Layers, History, Settings, Bell, Search, ShieldCheck, FileSignature, Clock, CheckCircle2, TrendingUp, Coins, X, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { DepositFlow, VoucherFlow, FeeFlow } from '../components/flows';
+import { AIInsightCard, PredictedAPYChart, AIRecommendationBadge } from '../components/flows';
+import { useAIPredictions } from '../hooks/useAIPredictions';
 
 const liquidityData = [
   { name: 'Oct', value: 4000000 },
@@ -19,6 +21,11 @@ export default function Dashboard() {
   const [voucherModalOpen, setVoucherModalOpen] = useState(false);
   const [feeModalOpen, setFeeModalOpen] = useState(false);
   const [selectedVault, setSelectedVault] = useState<typeof liquidityData[number] | null>(null);
+
+  // AI Predictions hook
+  const { data: aiData, loading: aiLoading, error: aiError } = useAIPredictions({
+    autoFetch: true,
+  });
 
   return (
     <div className="pt-20 min-h-screen bg-[#0A0B10] flex flex-col md:flex-row">
@@ -120,6 +127,39 @@ export default function Dashboard() {
 
         {activeTab === 'treasury' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+            {/* AI Insights Section */}
+            {aiData && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-purple-400" />
+                    <h2 className="text-xl font-bold">AI-Powered Insights</h2>
+                  </div>
+                  <button
+                    onClick={() => aiData && window.dispatchEvent(new CustomEvent('refreshPredictions'))}
+                    className="text-sm text-slate-400 hover:text-white transition-colors"
+                  >
+                    {aiLoading ? 'Refreshing...' : 'Refresh'}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* AI Insight Card */}
+                  <AIInsightCard
+                    marketSummary={aiData.marketSummary}
+                    topRecommendation={aiData.topRecommendation}
+                    predictions={aiData.predictions}
+                  />
+
+                  {/* Predicted APY Chart */}
+                  <PredictedAPYChart
+                    predictions={aiData.predictions}
+                    height={220}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl">
@@ -157,44 +197,59 @@ export default function Dashboard() {
               
               <div className="space-y-4">
                 {[
-                  { asset: 'DOT', protocol: 'HydraDX', apy: '14.2%', capacity: '$12.4M / $15M', risk: 'Low' },
-                  { asset: 'USDT', protocol: 'ArthSwap', apy: '18.5%', capacity: '$4.2M / $5M', risk: 'Medium' },
-                  { asset: 'ETH', protocol: 'StellaSwap', apy: '16.8%', capacity: '$8.1M / $10M', risk: 'Low' },
-                ].map((vault, i) => (
-                  <div key={i} className="bg-[#13141C] border border-white/10 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 hover:border-white/20 transition-colors">
-                    <div className="flex items-center gap-4 w-full md:w-auto">
-                      <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                        <Layers className="w-6 h-6 text-[#E6007A]" />
-                      </div>
-                      <div>
-                        <div className="font-bold text-lg">Single-sided {vault.asset}</div>
-                        <div className="text-sm text-slate-400">Routed to {vault.protocol} Vault</div>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-8 w-full md:w-auto text-center md:text-left">
-                      <div>
-                        <div className="text-xs text-slate-500 mb-1">Protected APY</div>
-                        <div className="font-bold text-emerald-400">{vault.apy}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-500 mb-1">Vault Capacity</div>
-                        <div className="font-bold">{vault.capacity}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-500 mb-1">Risk Profile</div>
-                        <div className="font-bold text-slate-300">{vault.risk}</div>
-                      </div>
-                    </div>
+                  { id: 'hydra-dot-usdc', asset: 'DOT', protocol: 'HydraDX', apy: '14.2%', capacity: '$12.4M / $15M', risk: 'Low' },
+                  { id: 'arthswap-usdt', asset: 'USDT', protocol: 'ArthSwap', apy: '18.5%', capacity: '$4.2M / $5M', risk: 'Medium' },
+                  { id: 'stellaswap-eth', asset: 'ETH', protocol: 'StellaSwap', apy: '16.8%', capacity: '$8.1M / $10M', risk: 'Low' },
+                ].map((vault, i) => {
+                  const prediction = aiData?.predictions.find(p => p.vaultId === vault.id);
+                  const isTopPick = aiData?.topRecommendation?.vaultId === vault.id;
 
-                    <button
-                      onClick={() => setDepositModalOpen(true)}
-                      className="w-full md:w-auto bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
-                    >
-                      <FileSignature className="w-4 h-4" /> Propose Deposit
-                    </button>
-                  </div>
-                ))}
+                  return (
+                    <div key={i} className="bg-[#13141C] border border-white/10 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 hover:border-white/20 transition-colors relative">
+                      {isTopPick && (
+                        <div className="absolute top-4 right-4">
+                          <AIRecommendationBadge prediction={aiData?.topRecommendation} variant="minimal" />
+                        </div>
+                      )}
+                      <div className="flex items-center gap-4 w-full md:w-auto">
+                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                          <Layers className="w-6 h-6 text-[#E6007A]" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-lg">Single-sided {vault.asset}</div>
+                          <div className="text-sm text-slate-400">Routed to {vault.protocol} Vault</div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-8 w-full md:w-auto text-center md:text-left">
+                        <div>
+                          <div className="text-xs text-slate-500 mb-1">Protected APY</div>
+                          <div className="font-bold text-emerald-400">{vault.apy}</div>
+                          {prediction && (
+                            <div className="text-xs text-purple-400">
+                              → {prediction.predictions.days30}% predicted
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="text-xs text-slate-500 mb-1">Vault Capacity</div>
+                          <div className="font-bold">{vault.capacity}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-slate-500 mb-1">Risk Profile</div>
+                          <div className="font-bold text-slate-300">{vault.risk}</div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => setDepositModalOpen(true)}
+                        className="w-full md:w-auto bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                      >
+                        <FileSignature className="w-4 h-4" /> Propose Deposit
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </motion.div>
