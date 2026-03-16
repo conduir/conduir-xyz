@@ -34,6 +34,9 @@ lerna-debug.log*
 
 # Claude Code
 .claude/
+.agent/
+.agents/
+skills-lock.json
 
 # Testing
 coverage/
