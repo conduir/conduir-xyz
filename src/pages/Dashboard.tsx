@@ -82,7 +82,11 @@ export default function Dashboard() {
       <main className="flex-1 p-6 md:p-10 overflow-y-auto">
         <header className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-2xl font-bold font-display">
+            <h1 style={{
+              fontSize: '24px',
+              fontWeight: 700,
+              fontFamily: '"Space Grotesk", "Inter", sans-serif'
+            }}>
               {activeTab === 'treasury' && 'Treasury Vaults'}
               {activeTab === 'protocol' && 'Protocol Underwriting'}
               {activeTab === 'approvals' && 'Multi-sig Approvals'}
@@ -144,7 +148,11 @@ export default function Dashboard() {
             {/* Vaults List */}
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold">Available Protocol Vaults</h2>
+                <h2 style={{
+                  fontSize: '20px',
+                  fontWeight: 700,
+                  fontFamily: '"Space Grotesk", "Inter", sans-serif'
+                }}>Available Protocol Vaults</h2>
                 <div className="relative">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                   <input 
@@ -230,7 +238,12 @@ export default function Dashboard() {
 
             {/* Chart Section */}
             <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl">
-              <h3 className="text-lg font-bold mb-6">Secured Liquidity Trend</h3>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: 700,
+                fontFamily: '"Space Grotesk", "Inter", sans-serif',
+                marginBottom: '24px'
+              }}>Secured Liquidity Trend</h3>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={liquidityData}>
@@ -256,7 +269,11 @@ export default function Dashboard() {
                   <Shield className="w-6 h-6 text-blue-400" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold">Register Protocol Vault</h2>
+                  <h2 style={{
+                    fontSize: '20px',
+                    fontWeight: 700,
+                    fontFamily: '"Space Grotesk", "Inter", sans-serif'
+                  }}>Register Protocol Vault</h2>
                   <p className="text-sm text-slate-400">Pay listing fee and deposit native collateral to mint IL Vouchers.</p>
                 </div>
               </div>
@@ -313,7 +330,12 @@ export default function Dashboard() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             <div className="bg-[#13141C] border border-white/10 rounded-2xl p-8 text-center mb-6">
               <ShieldCheck className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-2">Safe Multi-sig Queue</h2>
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: 700,
+                fontFamily: '"Space Grotesk", "Inter", sans-serif',
+                marginBottom: '8px'
+              }}>Safe Multi-sig Queue</h2>
               <p className="text-slate-400 max-w-lg mx-auto">
                 Transactions proposed via the Conduir dApp are sent to your DAO's Safe. They require 3 out of 5 signatures to execute on-chain.
               </p>
@@ -363,7 +385,11 @@ export default function Dashboard() {
         {activeTab === 'vouchers' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">IL Voucher Engine</h2>
+              <h2 style={{
+                fontSize: '20px',
+                fontWeight: 700,
+                fontFamily: '"Space Grotesk", "Inter", sans-serif'
+              }}>IL Voucher Engine</h2>
               <button
                 onClick={() => setVoucherModalOpen(true)}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2"
@@ -464,7 +490,14 @@ export default function Dashboard() {
         {activeTab === 'settings' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl space-y-8">
             <div className="bg-[#13141C] border border-white/10 rounded-2xl p-6 md:p-8">
-              <h3 className="text-lg font-bold mb-6 border-b border-white/10 pb-4">Notifications</h3>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: 700,
+                fontFamily: '"Space Grotesk", "Inter", sans-serif',
+                marginBottom: '24px',
+                borderBottom: '1px solid rgba(255,255,255,0.1)',
+                paddingBottom: '16px'
+              }}>Notifications</h3>
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -497,7 +530,14 @@ export default function Dashboard() {
             </div>
 
             <div className="bg-[#13141C] border border-white/10 rounded-2xl p-6 md:p-8">
-              <h3 className="text-lg font-bold mb-6 border-b border-white/10 pb-4">Security & Multi-sig</h3>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: 700,
+                fontFamily: '"Space Grotesk", "Inter", sans-serif',
+                marginBottom: '24px',
+                borderBottom: '1px solid rgba(255,255,255,0.1)',
+                paddingBottom: '16px'
+              }}>Security & Multi-sig</h3>
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>

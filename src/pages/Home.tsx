@@ -6,36 +6,171 @@ import { Link, useNavigate } from 'react-router-dom';
 const Hero = () => {
   const navigate = useNavigate();
   return (
-    <section className="pt-40 pb-24 px-6 relative overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#E6007A]/20 rounded-full blur-[120px] opacity-50 pointer-events-none" />
-      
-      <div className="max-w-5xl mx-auto text-center relative z-10">
+    <section
+      style={{
+        paddingTop: '160px',
+        paddingBottom: '96px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        position: 'relative',
+        overflow: 'hidden',
+        background: 'linear-gradient(180deg, #0A0B10 0%, #13141C 100%)'
+      }}
+    >
+      {/* Background glow */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '800px',
+          height: '800px',
+          background: 'radial-gradient(circle, rgba(230,0,122,0.15) 0%, transparent 70%)',
+          borderRadius: '50%',
+          filter: 'blur(120px)',
+          opacity: '0.6',
+          pointerEvents: 'none'
+        }}
+      />
+
+      <div style={{ maxWidth: '80rem', margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 10 }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-sm text-slate-300 mb-8">
-            <span className="w-2 h-2 rounded-full bg-[#E6007A] animate-pulse" />
-            Built for the Polkadot Hub
-          </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-8 leading-[1.1]">
-            Liquidity Without <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E6007A] to-purple-500">
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              borderRadius: '9999px',
+              marginBottom: '32px',
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              backdropFilter: 'blur(10px)'
+            }}
+          >
+            <span
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: '#E6007A',
+                boxShadow: '0 0 10px rgba(230,0,122,0.5)',
+                animation: 'pulse 2s infinite'
+              }}
+            />
+            <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.7)' }}>
+              Built for the Polkadot Hub
+            </span>
+          </motion.div>
+
+          {/* Main heading */}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            style={{
+              fontSize: 'clamp(48px, 8vw, 80px)',
+              fontWeight: 700,
+              lineHeight: 1.1,
+              letterSpacing: '-0.02em',
+              marginBottom: '32px',
+              fontFamily: '"Space Grotesk", "Inter", sans-serif'
+            }}
+          >
+            Liquidity Without{' '}
+            <br />
+            <span
+              style={{
+                background: 'linear-gradient(135deg, #E6007A 0%, #9333EA 50%, #7C3AED 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                display: 'inline-block'
+              }}
+            >
               The Liability.
             </span>
-          </h1>
-          <p className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed">
+          </motion.h1>
+
+          {/* Description */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            style={{
+              fontSize: 'clamp(18px, 2vw, 22px)',
+              color: 'rgba(161, 161, 170, 1)',
+              lineHeight: 1.7,
+              maxWidth: '48rem',
+              margin: '0 auto 48px'
+            }}
+          >
             Conduir separates Impermanent Loss from liquidity provision. DAO Treasuries earn protected yield. Protocols secure stable, non-mercenary liquidity.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/app" className="w-full sm:w-auto bg-[#E6007A] hover:bg-[#C20066] text-white px-8 py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(230,0,122,0.3)]">
-              Launch dApp <ArrowRight className="w-5 h-5" />
+          </motion.p>
+
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}
+          >
+            <Link
+              to="/app"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '16px 32px',
+                borderRadius: '12px',
+                fontWeight: 600,
+                fontSize: '16px',
+                background: 'linear-gradient(135deg, #E6007A 0%, #C20066 100%)',
+                color: '#FFFFFF',
+                boxShadow: '0 0 40px rgba(230, 0, 122, 0.3)',
+                minWidth: '180px',
+                textDecoration: 'none',
+                transition: 'transform 0.2s, box-shadow 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              Launch dApp <ArrowRight style={{ width: '20px', height: '20px' }} />
             </Link>
-            <Link to="/docs" className="w-full sm:w-auto bg-[#13141C] border border-white/10 hover:bg-white/5 text-white px-8 py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
-              Read the Docs <BookOpen className="w-5 h-5" />
+            <Link
+              to="/docs"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '16px 32px',
+                borderRadius: '12px',
+                fontWeight: 600,
+                fontSize: '16px',
+                background: '#13141C',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#FFFFFF',
+                minWidth: '180px',
+                textDecoration: 'none',
+                transition: 'transform 0.2s, background 0.2s'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = '#13141C'; }}
+            >
+              Read the Docs <BookOpen style={{ width: '20px', height: '20px' }} />
             </Link>
-          </div>
+          </motion.div>
         </motion.div>
       </div>
     </section>
@@ -46,7 +181,12 @@ const Problem = () => (
   <section id="problem" className="py-24 px-6 bg-[#0A0B10]">
     <div className="max-w-7xl mx-auto">
       <div className="text-center mb-16">
-        <h2 className="text-3xl md:text-4xl font-bold mb-4">The Liquidity Dilemma</h2>
+        <h2 style={{
+          fontSize: 'clamp(24px, 3vw, 32px)',
+          fontWeight: 700,
+          marginBottom: '16px',
+          fontFamily: '"Space Grotesk", "Inter", sans-serif'
+        }}>The Liquidity Dilemma</h2>
         <p className="text-slate-400 max-w-2xl mx-auto">Current AMM models force a compromise between capital efficiency and risk, creating a broken system for institutional players.</p>
       </div>
 
@@ -91,7 +231,12 @@ const Solution = () => (
   <section id="solution" className="py-24 px-6 border-y border-white/5 bg-[#0A0B10]/50">
     <div className="max-w-7xl mx-auto">
       <div className="text-center mb-16">
-        <h2 className="text-3xl md:text-4xl font-bold mb-4">Isolating Risk with the IL Voucher</h2>
+        <h2 style={{
+          fontSize: 'clamp(24px, 3vw, 32px)',
+          fontWeight: 700,
+          marginBottom: '16px',
+          fontFamily: '"Space Grotesk", "Inter", sans-serif'
+        }}>Isolating Risk with the IL Voucher</h2>
         <p className="text-slate-400 max-w-2xl mx-auto">Conduir's matching engine pairs risk-averse capital with protocols willing to underwrite IL for guaranteed liquidity.</p>
       </div>
 
@@ -154,7 +299,12 @@ const DualValue = () => (
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-sm text-emerald-400 mb-4">
               For DAO Treasuries
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Protected Treasury Yield</h2>
+            <h2 style={{
+              fontSize: 'clamp(24px, 3vw, 32px)',
+              fontWeight: 700,
+              marginBottom: '16px',
+              fontFamily: '"Space Grotesk", "Inter", sans-serif'
+            }}>Protected Treasury Yield</h2>
             <p className="text-slate-400 text-lg leading-relaxed">
               Deploy idle treasury assets into productive DeFi strategies without the existential risk of Impermanent Loss. Predictable returns, zero IL.
             </p>
@@ -181,7 +331,12 @@ const DualValue = () => (
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-sm text-blue-400 mb-4">
               For DeFi Protocols
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Sustainable Market Depth</h2>
+            <h2 style={{
+              fontSize: 'clamp(24px, 3vw, 32px)',
+              fontWeight: 700,
+              marginBottom: '16px',
+              fontFamily: '"Space Grotesk", "Inter", sans-serif'
+            }}>Sustainable Market Depth</h2>
             <p className="text-slate-400 text-lg leading-relaxed">
               Bootstrap liquidity without hyper-inflationary token emissions. Pay for IL only when it happens, securing loyal, long-term capital.
             </p>
@@ -206,7 +361,12 @@ const DashboardPreview = () => (
   <section id="dashboard" className="py-24 px-6 bg-[#13141C] border-y border-white/5">
     <div className="max-w-7xl mx-auto">
       <div className="text-center mb-16">
-        <h2 className="text-3xl md:text-4xl font-bold mb-4">Conduir App Architecture</h2>
+        <h2 style={{
+          fontSize: 'clamp(24px, 3vw, 32px)',
+          fontWeight: 700,
+          marginBottom: '16px',
+          fontFamily: '"Space Grotesk", "Inter", sans-serif'
+        }}>Conduir App Architecture</h2>
         <p className="text-slate-400 max-w-2xl mx-auto">A brief overview of the dApp interface designed for institutional users.</p>
       </div>
 
@@ -373,7 +533,12 @@ const FlowWalkthrough = () => {
     <section className="py-24 px-6 bg-[#0A0B10]">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Interactive Protocol Flows</h2>
+          <h2 style={{
+            fontSize: 'clamp(24px, 3vw, 32px)',
+            fontWeight: 700,
+            marginBottom: '16px',
+            fontFamily: '"Space Grotesk", "Inter", sans-serif'
+          }}>Interactive Protocol Flows</h2>
           <p className="text-slate-400 max-w-2xl mx-auto">Step through each protocol flow to understand how Conduir separates IL risk from liquidity provision.</p>
         </div>
 

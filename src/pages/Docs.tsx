@@ -50,14 +50,24 @@ export default function Docs() {
             Docs <ChevronRight className="w-4 h-4" /> Getting Started <ChevronRight className="w-4 h-4" /> Introduction
           </div>
           
-          <h1 className="text-4xl md:text-5xl font-bold font-display mb-6">Introduction to Conduir</h1>
+          <h1 style={{
+            fontSize: 'clamp(36px, 5vw, 48px)',
+            fontWeight: 700,
+            marginBottom: '24px',
+            fontFamily: '"Space Grotesk", "Inter", sans-serif'
+          }}>Introduction to Conduir</h1>
           <p className="text-xl text-slate-400 leading-relaxed mb-12">
             Conduir is a liquidity infrastructure primitive built for the Polkadot Hub that separates Impermanent Loss (IL) risk from liquidity provision.
           </p>
 
           <div className="space-y-12 text-slate-300 leading-relaxed">
             <section>
-              <h2 className="text-2xl font-bold text-white mb-4">The Problem with Traditional AMMs</h2>
+              <h2 style={{
+                fontSize: 'clamp(24px, 3vw, 32px)',
+                fontWeight: 700,
+                marginBottom: '16px',
+                fontFamily: '"Space Grotesk", "Inter", sans-serif'
+              }}>The Problem with Traditional AMMs</h2>
               <p className="mb-4">
                 In traditional Automated Market Makers (AMMs), Liquidity Providers (LPs) are forced to bear the risk of Impermanent Loss. This existential risk makes it difficult for conservative capital, such as DAO Treasuries, to participate in DeFi yield generation.
               </p>
@@ -67,7 +77,12 @@ export default function Docs() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold text-white mb-4">The Conduir Solution</h2>
+              <h2 style={{
+                fontSize: 'clamp(24px, 3vw, 32px)',
+                fontWeight: 700,
+                marginBottom: '16px',
+                fontFamily: '"Space Grotesk", "Inter", sans-serif'
+              }}>The Conduir Solution</h2>
               <p className="mb-4">
                 Conduir solves this by decoupling the capital provision from the IL risk. We introduce a matching engine that pairs two distinct types of users:
               </p>
@@ -78,7 +93,15 @@ export default function Docs() {
             </section>
 
             <section className="bg-[#13141C] border border-white/10 p-8 rounded-2xl">
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: 700,
+                fontFamily: '"Space Grotesk", "Inter", sans-serif',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '16px'
+              }}>
                 <Layers className="w-6 h-6 text-[#E6007A]" />
                 The IL Voucher (ILV)
               </h3>
