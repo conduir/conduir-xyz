@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { BookOpen, FileText, Code, Shield, Layers, ChevronRight, ArrowRight, AlertTriangle, CheckCircle, ExternalLink, Github, Zap, DoorOpen, Droplets, BarChart2, Ticket, Landmark, Eye, XCircle } from 'lucide-react';
+import { BookOpen, FileText, Code, Shield, Layers, ChevronRight, ArrowRight, AlertTriangle, CheckCircle, ExternalLink, Github, Zap, DoorOpen, Droplets, BarChart2, Ticket, Landmark, Eye, XCircle, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 type DocSection = 'introduction' | 'architecture' | 'il-vouchers' | 'matching-engine' | 'smart-contracts' | 'api-reference' | 'protocol-guide' | 'lp-guide';
 
@@ -23,6 +24,7 @@ const SECTION_CATEGORIES: Record<string, DocSection[]> = {
 
 export default function Docs() {
   const [activeSection, setActiveSection] = useState<DocSection>('introduction');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const renderSection = () => {
     switch (activeSection) {
@@ -144,7 +146,7 @@ export default function Docs() {
               <p className="mb-4 text-slate-400">
                 Conduir is deployed on the Polkadot Hub TestNet. View contracts on Blockscout:
               </p>
-              <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl">
+              <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/10">
@@ -558,7 +560,7 @@ healthRatio = (collateralBalance / minimumRequired) * 100%`}
 
             <section>
               <h3 className="text-xl font-bold mb-4 font-display">Contract Addresses</h3>
-              <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl">
+              <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/10">
@@ -638,7 +640,7 @@ healthRatio = (collateralBalance / minimumRequired) * 100%`}
 
             <section>
               <h3 className="text-xl font-bold mb-4 font-display">Key Constants</h3>
-              <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl">
+              <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/10">
@@ -934,7 +936,7 @@ healthRatio = (collateralBalance / minimumRequired) * 100%`}
 
             <section>
               <h3 className="text-xl font-bold mb-4 font-display">Token Approval Summary</h3>
-              <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl">
+              <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/10">
@@ -966,8 +968,55 @@ healthRatio = (collateralBalance / minimumRequired) * 100%`}
 
   return (
     <div className="pt-20 min-h-screen bg-[#0A0B10] flex flex-col md:flex-row">
-      {/* Sidebar */}
-      <aside className="w-full md:w-64 border-r border-white/10 bg-[#13141C] p-6 flex flex-col gap-6">
+      {/* Mobile section picker */}
+      <div className="md:hidden sticky top-20 z-30 bg-[#0A0B10] border-b border-white/10 px-4 py-3">
+        <button
+          onClick={() => setSidebarOpen(o => !o)}
+          className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-[#13141C] border border-white/10 text-sm text-white"
+        >
+          <span className="font-medium">{SECTION_TITLES[activeSection]}</span>
+          <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${sidebarOpen ? 'rotate-180' : ''}`} />
+        </button>
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden mt-2 rounded-xl bg-[#13141C] border border-white/10"
+            >
+              {Object.entries(SECTION_CATEGORIES).map(([category, sections]) => (
+                <div key={category} className="px-3 py-2">
+                  <div className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-2 py-1">{category}</div>
+                  {sections.map((section) => {
+                    const titles: Record<DocSection, string> = {
+                      'introduction': 'Introduction', 'architecture': 'Architecture',
+                      'il-vouchers': 'IL Vouchers', 'matching-engine': 'Matching Engine',
+                      'smart-contracts': 'Smart Contracts', 'api-reference': 'API Reference',
+                      'protocol-guide': 'Protocol Integration', 'lp-guide': 'LP Guide',
+                    };
+                    return (
+                      <button
+                        key={section}
+                        onClick={() => { setActiveSection(section); setSidebarOpen(false); }}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                          activeSection === section ? 'text-white bg-white/5' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {titles[section]}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-64 flex-shrink-0 border-r border-white/10 bg-[#13141C] p-6 flex-col gap-6">
         {Object.entries(SECTION_CATEGORIES).map(([category, sections]) => (
           <div key={category} className="space-y-1">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">{category}</div>

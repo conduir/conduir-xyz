@@ -307,7 +307,7 @@ function ILChecker({ positions }: { positions: Position[] }) {
 
           {tab === 'calculator' && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600 mb-2">Entry Price ($)</label>
                   <input type="number" min="0" placeholder="10.00" value={entryPrice} onChange={e => setEntryPrice(e.target.value)} className="input-field" />

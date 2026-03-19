@@ -17,7 +17,7 @@ export default function Footer() {
           <a href="#" className="hover:text-white transition-colors"><Discord className="w-5 h-5" /></a>
         </div>
         
-        <div className="text-sm text-slate-500">
+        <div className="text-sm text-slate-500 text-center md:text-left">
           © {new Date().getFullYear()} Conduir Protocol. All rights reserved.
         </div>
       </div>

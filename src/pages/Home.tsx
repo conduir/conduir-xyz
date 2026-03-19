@@ -50,7 +50,7 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-[clamp(17px,2vw,20px]] text-zinc-400 leading-relaxed max-w-2xl mx-auto mb-12 font-sans"
+            className="text-[clamp(17px,2vw,20px)] text-zinc-400 leading-relaxed max-w-2xl mx-auto mb-12 font-sans"
           >
             Conduir separates Impermanent Loss from liquidity provision. DAO Treasuries earn protected yield. Protocols secure stable, non-mercenary liquidity.
           </motion.p>
@@ -222,7 +222,7 @@ const DualValue = () => (
           initial={{ opacity: 0, x: 20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          className="space-y-8 lg:pl-12 border-l-0 lg:border-l border-white/[0.08]"
+          className="space-y-8 md:pl-6 lg:pl-12 border-l-0 lg:border-l border-white/[0.08]"
         >
           <div>
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-data uppercase tracking-wider mb-4">
