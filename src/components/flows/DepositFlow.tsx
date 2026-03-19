@@ -1,285 +1,231 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, Wallet, TrendingUp, Shield, Layers, ChevronLeft, CheckCircle2 } from 'lucide-react';
-import { useDepositFlow, Asset, Vault } from '../../hooks/useDepositFlow';
-import { Modal, ConfirmDialog, SuccessView, Input, Button, LoadingSpinner } from '../ui';
+import { X, ArrowRight, CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
+import { useDepositFlow } from '../../hooks/useDepositFlow';
+import type { Address } from 'viem';
 
-interface DepositFlowProps {
+const BLOCKSCOUT = 'https://blockscout-testnet.polkadot.io';
+
+interface Props {
   isOpen: boolean;
   onClose: () => void;
+  userAddress?: Address;
+  onSuccess?: () => void;
 }
 
-export function DepositFlow({ isOpen, onClose }: DepositFlowProps) {
-  const { state, actions } = useDepositFlow();
+const STEPS = ['amount', 'approve-a', 'approve-b', 'confirm', 'success'] as const;
 
-  // Reset when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      actions.reset();
-    }
-  }, [isOpen, actions]);
+function StepCircles({ current }: { current: string }) {
+  const steps = [
+    { key: 'amount',    label: 'Amounts' },
+    { key: 'approve-a', label: 'Approve A' },
+    { key: 'approve-b', label: 'Approve B' },
+    { key: 'confirm',   label: 'Confirm' },
+  ];
+  const idx = STEPS.indexOf(current as typeof STEPS[number]);
+  return (
+    <div className="flex items-center gap-2 px-6 pt-5">
+      {steps.map((s, i) => (
+        <React.Fragment key={s.key}>
+          <div className="flex flex-col items-center gap-1">
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center font-data text-[10px] transition-colors ${
+              i < idx ? 'bg-[#E6007A] text-white' :
+              i === idx ? 'bg-[#E6007A]/20 border border-[#E6007A] text-[#E6007A]' :
+              'bg-white/5 border border-white/10 text-zinc-600'
+            }`}>
+              {i < idx ? '✓' : i + 1}
+            </div>
+          </div>
+          {i < steps.length - 1 && (
+            <div className={`flex-1 h-px transition-colors ${i < idx ? 'bg-[#E6007A]/50' : 'bg-white/10'}`} />
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
 
+export function DepositFlow({ isOpen, onClose, userAddress, onSuccess }: Props) {
+  const { state, balanceA, balanceB, actions } = useDepositFlow(userAddress);
+  const handleClose = () => { actions.reset(); onClose(); };
   if (!isOpen) return null;
 
-  const renderSelectAsset = () => (
-    <div>
-      <h3 className="text-xl font-bold mb-2">Select Asset to Deposit</h3>
-      <p className="text-slate-400 mb-6">Choose an asset from your treasury to deposit into a Conduir vault.</p>
-
-      <div className="grid gap-3">
-        {actions.getAssets().map((asset) => (
-          <motion.button
-            key={asset.symbol}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            onClick={() => actions.selectAsset(asset)}
-            className="bg-[#0A0B10] border border-white/10 hover:border-[#E6007A]/50 rounded-xl p-4 text-left transition-all flex items-center justify-between group focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10]"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-                <span className="text-lg font-bold">{asset.symbol.charAt(0)}</span>
-              </div>
-              <div>
-                <div className="font-bold">{asset.symbol}</div>
-                <div className="text-sm text-slate-400">{asset.name}</div>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="font-mono">{parseFloat(asset.balance).toLocaleString()}</div>
-              <div className="text-xs text-slate-500">Available</div>
-            </div>
-          </motion.button>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderAmount = () => {
-    const availableVaults = state.selectedAsset ? actions.getAvailableVaults(state.selectedAsset.symbol) : [];
-    const estimatedYield = actions.getEstimatedYield();
-
-    return (
-      <div>
-        <button
-          onClick={() => actions.goToStep('select')}
-          className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4" /> Back to asset selection
-        </button>
-
-        <h3 className="text-xl font-bold mb-2">Enter Deposit Amount</h3>
-        <p className="text-slate-400 mb-6">
-          Depositing {state.selectedAsset?.symbol} into a vault for IL-protected yield.
-        </p>
-
-        <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-400 mb-2">
-              Amount ({state.selectedAsset?.symbol})
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                value={state.amount}
-                onChange={(e) => actions.setAmount(e.target.value)}
-                placeholder="0.00"
-                className="w-full bg-[#0A0B10] border border-white/10 rounded-xl pl-4 pr-24 py-4 text-white text-lg focus:outline-none focus:border-[#E6007A]/50 transition-colors"
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                <span className="text-slate-400">{state.selectedAsset?.symbol}</span>
-                <button
-                  onClick={actions.setMaxAmount}
-                  className="text-xs font-bold text-[#E6007A] bg-[#E6007A]/10 hover:bg-[#E6007A]/20 px-3 py-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50"
-                >
-                  MAX
-                </button>
-              </div>
-            </div>
-            <div className="flex justify-between mt-2 text-sm">
-              <span className="text-slate-500">Available: {parseFloat(state.selectedAsset?.balance || '0').toLocaleString()}</span>
-              {estimatedYield > 0 && (
-                <span className="text-emerald-400">~${estimatedYield.toLocaleString()}/yr est. yield</span>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-400 mb-3">
-              Select Vault
-            </label>
-            <div className="space-y-3">
-              {availableVaults.map((vault) => (
-                <button
-                  key={vault.id}
-                  onClick={() => actions.selectVault(vault)}
-                  className={`w-full text-left rounded-xl p-4 border transition-all focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10] ${
-                    state.selectedVault?.id === vault.id
-                      ? 'border-[#E6007A] bg-[#E6007A]/5'
-                      : 'border-white/10 hover:border-white/20 bg-[#0A0B10]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
-                        <Layers className="w-5 h-5 text-[#E6007A]" />
-                      </div>
-                      <div>
-                        <div className="font-bold">{vault.protocol}</div>
-                        <div className="text-xs text-slate-500">Single-sided {vault.asset}</div>
-                      </div>
-                    </div>
-                    <div className="text-emerald-400 font-bold">{vault.apy}% APY</div>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="text-slate-500">
-                      Capacity: ${(vault.capacity / 1000000).toFixed(1)}M
-                    </div>
-                    <div className="text-slate-500">
-                      Risk: <span className={`font-medium ${
-                        vault.riskLevel === 'Low' ? 'text-emerald-400' :
-                        vault.riskLevel === 'Medium' ? 'text-orange-400' :
-                        'text-red-400'
-                      }`}>{vault.riskLevel}</span>
-                    </div>
-                  </div>
-                  <div className="mt-2 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-[#E6007A] to-purple-500"
-                      style={{ width: `${(vault.utilized / vault.capacity) * 100}%` }}
-                    />
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {state.error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400 text-sm">
-              {state.error}
-            </div>
-          )}
-        </div>
-
-        <div className="flex gap-3 mt-6">
-          <Button
-            variant="secondary"
-            onClick={() => actions.goToStep('select')}
-            className="flex-1"
-          >
-            Back
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => actions.goToStep('confirm')}
-            disabled={!state.amount || !state.selectedVault}
-            className="flex-1"
-          >
-            Review Deposit <ArrowRight className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  const renderConfirm = () => (
-    <div>
-      <button
-        onClick={() => actions.goToStep('amount')}
-        className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors"
-      >
-        <ChevronLeft className="w-4 h-4" /> Back to edit amount
-      </button>
-
-      <h3 className="text-xl font-bold mb-2">Confirm Deposit</h3>
-      <p className="text-slate-400 mb-6">Review your deposit details before proposing to your Safe.</p>
-
-      <div className="bg-[#0A0B10] rounded-xl p-6 space-y-4 mb-6">
-        <div className="flex justify-between items-center pb-4 border-b border-white/10">
-          <span className="text-slate-400">Asset</span>
-          <span className="font-bold">{state.selectedAsset?.symbol}</span>
-        </div>
-        <div className="flex justify-between items-center pb-4 border-b border-white/10">
-          <span className="text-slate-400">Amount</span>
-          <span className="font-bold">{parseFloat(state.amount).toLocaleString()} {state.selectedAsset?.symbol}</span>
-        </div>
-        <div className="flex justify-between items-center pb-4 border-b border-white/10">
-          <span className="text-slate-400">Target Vault</span>
-          <span className="font-bold">{state.selectedVault?.protocol}</span>
-        </div>
-        <div className="flex justify-between items-center pb-4 border-b border-white/10">
-          <span className="text-slate-400">Expected APY</span>
-          <span className="font-bold text-emerald-400">{state.selectedVault?.apy}%</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-slate-400">IL Protection</span>
-          <span className="font-bold text-[#E6007A]">100% Covered</span>
-        </div>
-      </div>
-
-      <div className="bg-[#13141C] border border-white/10 rounded-xl p-4 mb-6 flex items-start gap-3">
-        <Shield className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-slate-400">
-          Your deposit is fully protected from impermanent loss. Any IL incurred will be covered by the protocol's collateral.
-        </p>
-      </div>
-
-      <Button
-        variant="primary"
-        onClick={actions.confirmDeposit}
-        disabled={state.isSubmitting}
-        className="w-full"
-        size="lg"
-      >
-        {state.isSubmitting ? (
-          <>
-            <LoadingSpinner size="sm" />
-            Processing...
-          </>
-        ) : (
-          <>
-            <Wallet className="w-5 h-5" />
-            Propose Deposit via Safe
-          </>
-        )}
-      </Button>
-    </div>
-  );
-
-  const renderSuccess = () => (
-    <SuccessView
-      title="Deposit Proposed!"
-      message="Your deposit has been added to the Safe queue. Once 3 out of 5 signers approve, it will be executed on-chain."
-      txHash={state.receiptTxHash || undefined}
-      details={[
-        { label: 'Asset', value: state.selectedAsset?.symbol || '' },
-        { label: 'Amount', value: `${parseFloat(state.amount).toLocaleString()} ${state.selectedAsset?.symbol}` },
-        { label: 'Vault', value: state.selectedVault?.protocol || '' },
-        { label: 'Expected APY', value: `${state.selectedVault?.apy}%` },
-      ]}
-      onNewAction={() => {
-        actions.reset();
-        onClose();
-      }}
-      actionLabel="New Deposit"
-    />
-  );
-
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={state.step}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
-        >
-          {state.step === 'select' && renderSelectAsset()}
-          {state.step === 'amount' && renderAmount()}
-          {state.step === 'confirm' && renderConfirm()}
-          {state.step === 'success' && renderSuccess()}
-        </motion.div>
-      </AnimatePresence>
-    </Modal>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96 }}
+        transition={{ duration: 0.2 }}
+        className="card card-pink w-full max-w-md shadow-2xl"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/[0.07]">
+          <div>
+            <p className="font-data text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+              {state.step !== 'success' ? `Step ${Math.max(1, STEPS.indexOf(state.step as typeof STEPS[number]))} of 4` : 'Complete'}
+            </p>
+            <h2 className="font-display font-bold text-lg mt-0.5">Deposit Liquidity</h2>
+          </div>
+          <button onClick={handleClose} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {state.step !== 'success' && <StepCircles current={state.step} />}
+
+        <div className="p-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={state.step}
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -12 }}
+              transition={{ duration: 0.15 }}
+            >
+              {state.step === 'amount' && (
+                <div className="space-y-4">
+                  <p className="font-data text-xs text-zinc-500">Deposit Token A and Token B with IL protection.</p>
+
+                  {[
+                    { label: 'Token A Amount', val: state.amountA, set: actions.setAmountA, bal: balanceA },
+                    { label: 'Token B Amount', val: state.amountB, set: actions.setAmountB, bal: balanceB },
+                  ].map(({ label, val, set, bal }) => (
+                    <div key={label}>
+                      <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-500 mb-2">{label}</label>
+                      <div className="relative">
+                        <input
+                          type="number" min="0" placeholder="0.00"
+                          value={val} onChange={e => set(e.target.value)}
+                          className="input-field pr-16"
+                        />
+                        <button
+                          onClick={() => set(bal)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 font-data text-[10px] uppercase tracking-widest text-[#E6007A] bg-[#E6007A]/10 hover:bg-[#E6007A]/20 px-2 py-1 rounded transition-colors"
+                        >Max</button>
+                      </div>
+                      <p className="font-data text-[10px] text-zinc-600 mt-1">Balance: {parseFloat(bal).toFixed(4)}</p>
+                    </div>
+                  ))}
+
+                  <div>
+                    <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-500 mb-2">
+                      Lock Duration — <span className="text-white">{state.lockDays} days</span>
+                    </label>
+                    <input
+                      type="range" min="7" max="365" step="1"
+                      value={state.lockDays} onChange={e => actions.setLockDays(Number(e.target.value))}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between font-data text-[10px] text-zinc-600 mt-1">
+                      <span>7 days</span><span>365 days</span>
+                    </div>
+                  </div>
+
+                  {state.error && <p className="font-data text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2">{state.error}</p>}
+
+                  <button onClick={actions.proceedFromAmount} className="btn-primary">
+                    Continue <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              {(state.step === 'approve-a' || state.step === 'approve-b') && (
+                <div className="space-y-4">
+                  <div className="stat-cell p-4 space-y-2">
+                    {[
+                      { label: 'Token A', value: parseFloat(state.amountA).toFixed(4) },
+                      { label: 'Token B', value: parseFloat(state.amountB).toFixed(4) },
+                      { label: 'Lock',    value: `${state.lockDays} days` },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="flex justify-between">
+                        <span className="font-data text-xs text-zinc-500">{label}</span>
+                        <span className="font-data text-xs text-white">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="bg-amber-500/8 border border-amber-500/20 rounded-xl p-4">
+                    <p className="font-data text-xs text-amber-400 font-medium mb-1 uppercase tracking-widest">
+                      Approve {state.step === 'approve-a' ? 'Token A' : 'Token B'}
+                    </p>
+                    <p className="font-data text-[11px] text-amber-400/70">
+                      Allow the Router to spend your {state.step === 'approve-a' ? 'Token A' : 'Token B'}.
+                    </p>
+                  </div>
+
+                  {state.error && <p className="font-data text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2">{state.error}</p>}
+
+                  <button
+                    onClick={state.step === 'approve-a' ? actions.approveA : actions.approveB}
+                    disabled={state.isSubmitting}
+                    className="btn-primary"
+                  >
+                    {state.isSubmitting
+                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
+                      : <>Approve {state.step === 'approve-a' ? 'Token A' : 'Token B'}</>
+                    }
+                  </button>
+                </div>
+              )}
+
+              {state.step === 'confirm' && (
+                <div className="space-y-4">
+                  <div className="stat-cell p-4 space-y-3">
+                    {[
+                      { label: 'Token A',      value: `${parseFloat(state.amountA).toFixed(4)}` },
+                      { label: 'Token B',      value: `${parseFloat(state.amountB).toFixed(4)}` },
+                      { label: 'Lock Duration', value: `${state.lockDays} days` },
+                      { label: 'IL Protection', value: '100% Covered', accent: true },
+                    ].map(({ label, value, accent }) => (
+                      <div key={label} className={`flex justify-between ${accent ? 'pt-3 border-t border-white/[0.05]' : ''}`}>
+                        <span className="font-data text-xs text-zinc-500">{label}</span>
+                        <span className={`font-data text-xs font-medium ${accent ? 'text-emerald-400' : 'text-white'}`}>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {state.error && <p className="font-data text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2">{state.error}</p>}
+
+                  <button onClick={actions.confirmDeposit} disabled={state.isSubmitting} className="btn-primary">
+                    {state.isSubmitting
+                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Depositing...</>
+                      : 'Confirm Deposit'
+                    }
+                  </button>
+                </div>
+              )}
+
+              {state.step === 'success' && (
+                <div className="text-center space-y-5 py-4">
+                  <div className="relative w-20 h-20 mx-auto">
+                    <div className="absolute inset-0 rounded-full bg-emerald-500/10 animate-ping" />
+                    <div className="relative w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+                      <CheckCircle2 className="w-9 h-9 text-emerald-400" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-display font-bold text-xl mb-1">Deposit Successful</h3>
+                    <p className="font-data text-xs text-zinc-500">Your liquidity is now IL-protected.</p>
+                  </div>
+                  {state.txHash && (
+                    <a
+                      href={`${BLOCKSCOUT}/tx/${state.txHash}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 font-data text-xs text-[#E6007A] hover:text-[#C20066] transition-colors"
+                    >
+                      View on Blockscout <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                  <button onClick={() => { actions.reset(); onSuccess?.(); onClose(); }} className="btn-ghost">
+                    Done
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </div>
   );
 }

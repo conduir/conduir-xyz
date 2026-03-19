@@ -1,572 +1,415 @@
 import React, { useState } from 'react';
-import { Wallet, BarChart3, ArrowRight, Shield, Layers, History, Settings, Bell, Search, ShieldCheck, FileSignature, Clock, CheckCircle2, TrendingUp, Coins, X } from 'lucide-react';
+import { useAccount } from 'wagmi';
+import { formatUnits } from 'viem';
+import { Shield, Layers, TrendingDown, RefreshCw, ExternalLink, Lock, ArrowUpRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { DepositFlow, VoucherFlow, FeeFlow } from '../components/flows';
+import { useTokenPrice } from '../web3/hooks/useOracle';
+import { useUserPositions, calcIL, formatAmount, type Position } from '../web3/hooks/useILVault';
+import { usePoolInfo } from '../web3/hooks/useRouter';
+import { getContractAddress } from '../web3/contracts/addresses';
+import { DepositFlow } from '../components/flows/DepositFlow';
+import { WithdrawFlow } from '../components/flows/WithdrawFlow';
+import { WalletButton } from '../components/web3/WalletButton';
 
-const liquidityData = [
-  { name: 'Oct', value: 4000000 },
-  { name: 'Nov', value: 6500000 },
-  { name: 'Dec', value: 8200000 },
-  { name: 'Jan', value: 12000000 },
-  { name: 'Feb', value: 15500000 },
-  { name: 'Mar', value: 18200000 },
-];
+const TOKEN_A = getContractAddress('tokenA');
+const TOKEN_B = getContractAddress('tokenB');
+const BLOCKSCOUT = 'https://blockscout-testnet.polkadot.io';
 
-export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<'treasury' | 'protocol' | 'vouchers' | 'approvals' | 'history' | 'settings'>('treasury');
-  const [depositModalOpen, setDepositModalOpen] = useState(false);
-  const [voucherModalOpen, setVoucherModalOpen] = useState(false);
-  const [feeModalOpen, setFeeModalOpen] = useState(false);
-  const [selectedVault, setSelectedVault] = useState<typeof liquidityData[number] | null>(null);
+const fadeUp = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.35 },
+};
+
+function StatusPill({ status }: { status: Position['status'] }) {
+  const cfg = {
+    ACTIVE:  { dot: 'bg-emerald-400', color: 'text-emerald-400' },
+    SETTLED: { dot: 'bg-blue-400',    color: 'text-blue-400' },
+    EXPIRED: { dot: 'bg-zinc-500',    color: 'text-zinc-500' },
+  }[status];
+  return (
+    <span className={`inline-flex items-center gap-1.5 font-data text-[10px] uppercase tracking-[0.15em] ${cfg.color}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {status.toLowerCase()}
+    </span>
+  );
+}
+
+function PoolCard({ onDeposit }: { onDeposit: () => void }) {
+  const { reserveA, reserveB, isLoading: resLoad, refetch } = usePoolInfo();
+  const { formattedPrice: priceA, updatedAt: updA, isLoading: pALoad } = useTokenPrice(TOKEN_A);
+  const { formattedPrice: priceB, updatedAt: updB, isLoading: pBLoad } = useTokenPrice(TOKEN_B);
+  const loading = resLoad || pALoad || pBLoad;
+
+  const stats = [
+    { label: 'Token A Price', value: `$${priceA}`, sub: updA?.toLocaleTimeString(), loading: pALoad },
+    { label: 'Token B Price', value: `$${priceB}`, sub: updB?.toLocaleTimeString(), loading: pBLoad },
+    { label: 'Reserve A',     value: formatAmount(reserveA), sub: 'tokens', loading: resLoad },
+    { label: 'Reserve B',     value: formatAmount(reserveB), sub: 'tokens', loading: resLoad },
+  ];
 
   return (
-    <div className="pt-20 min-h-screen bg-[#0A0B10] flex flex-col md:flex-row">
-      {/* Sidebar */}
-      <aside className="w-full md:w-64 border-r border-white/10 bg-[#13141C] p-6 flex flex-col gap-8">
-        <div className="space-y-2">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Views</div>
-          <button 
-            onClick={() => setActiveTab('treasury')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'treasury' ? 'bg-[#E6007A]/10 text-[#E6007A]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+    <div className="card card-pink p-6">
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <p className="font-data text-[10px] uppercase tracking-[0.18em] text-zinc-500 mb-1">Liquidity Pool</p>
+          <h2 className="text-2xl font-display font-bold tracking-tight">Token A / Token B</h2>
+          <p className="font-data text-xs text-zinc-600 mt-0.5">ConstantAMM · Pool ID 0</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 font-data text-[10px] uppercase tracking-[0.15em] text-emerald-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            IL Protected
+          </span>
+          <button
+            onClick={() => refetch()}
+            className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
           >
-            <Wallet className="w-4 h-4" />
-            DAO Treasury
-          </button>
-          <button 
-            onClick={() => setActiveTab('protocol')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'protocol' ? 'bg-blue-500/10 text-blue-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-          >
-            <BarChart3 className="w-4 h-4" />
-            Protocol Vaults
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
+      </div>
 
-        <div className="space-y-2">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Manage</div>
-          <button 
-            onClick={() => setActiveTab('approvals')}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'approvals' ? 'bg-emerald-500/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-          >
-            <div className="flex items-center gap-3">
-              <FileSignature className="w-4 h-4" />
-              Safe Queue
-            </div>
-            <span className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">2</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('vouchers')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'vouchers' ? 'bg-purple-500/10 text-purple-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-          >
-            <Layers className="w-4 h-4" />
-            IL Vouchers
-          </button>
-          <button 
-            onClick={() => setActiveTab('history')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'history' ? 'bg-orange-500/10 text-orange-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-          >
-            <History className="w-4 h-4" />
-            Tx History
-          </button>
-          <button 
-            onClick={() => setActiveTab('settings')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'settings' ? 'bg-slate-500/10 text-slate-300' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-          >
-            <Settings className="w-4 h-4" />
-            Settings
-          </button>
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        {stats.map(({ label, value, sub, loading: l }) => (
+          <div key={label} className="stat-cell p-4">
+            <p className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-500 mb-2">{label}</p>
+            {l
+              ? <div className="h-6 w-24 rounded bg-white/5 animate-pulse" />
+              : <p className="font-data text-xl text-white">{value}</p>
+            }
+            {sub && !l && <p className="font-data text-[10px] text-zinc-600 mt-1">{sub}</p>}
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-500/5 border border-emerald-500/15 mb-5">
+        <Shield className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+        <p className="font-data text-xs text-emerald-400/80">100% IL protection — covered by protocol collateral</p>
+      </div>
+
+      <button onClick={onDeposit} className="btn-primary">
+        <ArrowUpRight className="w-3.5 h-3.5" />
+        Deposit into Pool
+      </button>
+    </div>
+  );
+}
+
+function PositionsCard({ positions, isLoading, onWithdraw, onRefresh }: {
+  positions: Position[];
+  isLoading: boolean;
+  onWithdraw: (p: Position) => void;
+  onRefresh: () => void;
+}) {
+  return (
+    <div className="card card-blue p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <p className="font-data text-[10px] uppercase tracking-[0.18em] text-zinc-500 mb-1">Your Positions</p>
+          <h2 className="text-xl font-display font-bold tracking-tight">Active Deposits</h2>
         </div>
-      </aside>
+        <button
+          onClick={onRefresh}
+          className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
 
-      {/* Main Content */}
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto">
-        <header className="flex items-center justify-between mb-10">
-          <div>
-            <h1 style={{
-              fontSize: '24px',
-              fontWeight: 700,
-              fontFamily: '"Space Grotesk", "Inter", sans-serif'
-            }}>
-              {activeTab === 'treasury' && 'Treasury Vaults'}
-              {activeTab === 'protocol' && 'Protocol Underwriting'}
-              {activeTab === 'approvals' && 'Multi-sig Approvals'}
-              {activeTab === 'vouchers' && 'IL Voucher Engine'}
-              {activeTab === 'history' && 'Transaction History'}
-              {activeTab === 'settings' && 'Settings'}
-            </h1>
-            <p className="text-slate-400 text-sm mt-1">
-              {activeTab === 'treasury' && 'Deposit single-sided assets via the Vault Router for continuous yield.'}
-              {activeTab === 'protocol' && 'Register vaults, pay listing fees, and deposit collateral to mint IL Vouchers.'}
-              {activeTab === 'approvals' && 'Review and sign pending transactions in your DAO\'s Safe queue.'}
-              {activeTab === 'vouchers' && 'View the lifecycle of minted ERC-20 IL Vouchers (Active, Redeemed, Expired).'}
-              {activeTab === 'history' && 'Review your past deposits, withdrawals, and underwriting activity.'}
-              {activeTab === 'settings' && 'Manage your account preferences and notifications.'}
-            </p>
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2].map(i => <div key={i} className="h-24 rounded-xl bg-white/[0.03] animate-pulse" />)}
+        </div>
+      ) : positions.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-3">
+            <Layers className="w-5 h-5 text-zinc-600" />
           </div>
-          <div className="flex items-center gap-4">
-            <button className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
-              <Bell className="w-4 h-4" />
-            </button>
-            {/* Institutional Safe Wallet Indicator */}
-            <button className="bg-[#13141C] border border-white/20 pl-3 pr-4 py-2 rounded-xl text-sm font-medium flex items-center gap-3 hover:bg-white/5 transition-colors text-left">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                <ShieldCheck className="w-4 h-4 text-emerald-500" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Safe Multi-sig</span>
-                <span className="leading-none text-white flex items-center gap-2">
-                  0x71C...9A23 <span className="text-slate-500 text-xs font-normal">(3/5 Signers)</span>
-                </span>
-              </div>
-            </button>
-          </div>
-        </header>
-
-        {activeTab === 'treasury' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-            {/* Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl">
-                <div className="text-sm text-slate-400 mb-2">Total Protected Value</div>
-                <div className="text-3xl font-display font-bold">$24,500,000.00</div>
-                <div className="text-emerald-400 text-sm mt-2 flex items-center gap-1">
-                  +2.4% <span className="text-slate-500">vs last month</span>
+          <p className="font-data text-sm text-zinc-500">No positions yet</p>
+          <p className="font-data text-xs text-zinc-600 mt-1">Deposit into the pool to get started</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {positions.map((p, i) => (
+            <motion.div
+              key={p.positionId.toString()}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.06 }}
+              className="stat-cell p-4"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#E6007A]/10 border border-[#E6007A]/20 flex items-center justify-center flex-shrink-0">
+                    <span className="font-data text-[10px] text-[#E6007A]">#{p.positionId.toString()}</span>
+                  </div>
+                  <div>
+                    <StatusPill status={p.status} />
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <Lock className="w-3 h-3 text-zinc-600" />
+                      <p className="font-data text-[11px] text-zinc-500">
+                        {p.isLockExpired
+                          ? <span className="text-emerald-400">Unlocked</span>
+                          : `Locked until ${p.lockExpiry.toLocaleDateString()}`
+                        }
+                      </p>
+                    </div>
+                  </div>
                 </div>
+                {p.status === 'ACTIVE' && (
+                  <button
+                    onClick={() => onWithdraw(p)}
+                    disabled={!p.isLockExpired}
+                    className={`font-data text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-colors ${
+                      p.isLockExpired
+                        ? 'border-white/15 text-white hover:bg-white/10'
+                        : 'border-white/5 text-zinc-600 cursor-not-allowed'
+                    }`}
+                  >
+                    Withdraw
+                  </button>
+                )}
               </div>
-              <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl">
-                <div className="text-sm text-slate-400 mb-2">Average APY (Trading Fees)</div>
-                <div className="text-3xl font-display font-bold text-[#E6007A]">12.4%</div>
-                <div className="text-slate-500 text-sm mt-2">Continuous Yield Stream</div>
-              </div>
-              <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl">
-                <div className="text-sm text-slate-400 mb-2">Active Receipt Tokens</div>
-                <div className="text-3xl font-display font-bold">4</div>
-                <div className="text-slate-500 text-sm mt-2">Across 3 Protocol Vaults</div>
-              </div>
-            </div>
-
-            {/* Vaults List */}
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 style={{
-                  fontSize: '20px',
-                  fontWeight: 700,
-                  fontFamily: '"Space Grotesk", "Inter", sans-serif'
-                }}>Available Protocol Vaults</h2>
-                <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                  <input 
-                    type="text" 
-                    placeholder="Search vaults..." 
-                    className="bg-[#13141C] border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-[#E6007A]/50 transition-colors w-64"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/[0.05]">
                 {[
-                  { asset: 'DOT', protocol: 'HydraDX', apy: '14.2%', capacity: '$12.4M / $15M', risk: 'Low' },
-                  { asset: 'USDT', protocol: 'ArthSwap', apy: '18.5%', capacity: '$4.2M / $5M', risk: 'Medium' },
-                  { asset: 'ETH', protocol: 'StellaSwap', apy: '16.8%', capacity: '$8.1M / $10M', risk: 'Low' },
-                ].map((vault, i) => (
-                  <div key={i} className="bg-[#13141C] border border-white/10 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 hover:border-white/20 transition-colors">
-                    <div className="flex items-center gap-4 w-full md:w-auto">
-                      <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                        <Layers className="w-6 h-6 text-[#E6007A]" />
-                      </div>
-                      <div>
-                        <div className="font-bold text-lg">Single-sided {vault.asset}</div>
-                        <div className="text-sm text-slate-400">Routed to {vault.protocol} Vault</div>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-8 w-full md:w-auto text-center md:text-left">
-                      <div>
-                        <div className="text-xs text-slate-500 mb-1">Protected APY</div>
-                        <div className="font-bold text-emerald-400">{vault.apy}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-500 mb-1">Vault Capacity</div>
-                        <div className="font-bold">{vault.capacity}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-500 mb-1">Risk Profile</div>
-                        <div className="font-bold text-slate-300">{vault.risk}</div>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => setDepositModalOpen(true)}
-                      className="w-full md:w-auto bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
-                    >
-                      <FileSignature className="w-4 h-4" /> Propose Deposit
-                    </button>
+                  { label: 'Token A', value: formatAmount(p.amountA) },
+                  { label: 'Token B', value: formatAmount(p.amountB) },
+                  { label: 'LP Tokens', value: formatAmount(p.lpAmount) },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <p className="font-data text-[10px] uppercase tracking-[0.1em] text-zinc-600 mb-0.5">{label}</p>
+                    <p className="font-data text-sm text-white">{value}</p>
                   </div>
                 ))}
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
-        {activeTab === 'protocol' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-            {/* Protocol Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl">
-                <div className="text-sm text-slate-400 mb-2">Active IL Liability</div>
-                <div className="text-3xl font-display font-bold text-blue-400">$1,240,500.00</div>
-                <div className="text-slate-500 text-sm mt-2">Underwritten across 2 vaults</div>
-              </div>
-              <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl">
-                <div className="text-sm text-slate-400 mb-2">Secured Liquidity</div>
-                <div className="text-3xl font-display font-bold">$18,200,000.00</div>
-                <div className="text-emerald-400 text-sm mt-2 flex items-center gap-1">
-                  +12.4% <span className="text-slate-500">vs last month</span>
-                </div>
-              </div>
-              <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl">
-                <div className="text-sm text-slate-400 mb-2">Fees Paid to Splitter</div>
-                <div className="text-3xl font-display font-bold">$45,200</div>
-                <button
-                  onClick={() => setFeeModalOpen(true)}
-                  className="text-sm text-[#E6007A] hover:text-[#C20066] mt-2 flex items-center gap-1 transition-colors"
-                >
-                  View breakdown <TrendingUp className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
+function ILChecker({ positions }: { positions: Position[] }) {
+  const [tab, setTab] = useState<'positions' | 'calculator'>('positions');
+  const [entryPrice, setEntryPrice] = useState('');
+  const [currentPrice, setCurrentPrice] = useState('');
+  const [depositAmount, setDepositAmount] = useState('');
+  const { price: currentPriceA } = useTokenPrice(TOKEN_A);
 
-            {/* Chart Section */}
-            <div className="bg-[#13141C] border border-white/10 p-6 rounded-2xl">
-              <h3 style={{
-                fontSize: '18px',
-                fontWeight: 700,
-                fontFamily: '"Space Grotesk", "Inter", sans-serif',
-                marginBottom: '24px'
-              }}>Secured Liquidity Trend</h3>
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={liquidityData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                    <XAxis dataKey="name" stroke="#64748b" tick={{fill: '#64748b', fontSize: 12}} axisLine={false} tickLine={false} dy={10} />
-                    <YAxis stroke="#64748b" tick={{fill: '#64748b', fontSize: 12}} axisLine={false} tickLine={false} tickFormatter={(value) => `$${value / 1000000}M`} dx={-10} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#0A0B10', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
-                      itemStyle={{ color: '#3b82f6', fontWeight: 'bold' }}
-                      formatter={(value) => [`$${(value as number).toLocaleString()}`, 'Liquidity']}
-                      labelStyle={{ color: '#94a3b8', marginBottom: '4px' }}
-                    />
-                    <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#13141C', stroke: '#3b82f6', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff' }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+  const calcResult = (() => {
+    const ep = parseFloat(entryPrice), cp = parseFloat(currentPrice), dep = parseFloat(depositAmount);
+    if (!ep || !cp || ep <= 0 || cp <= 0) return null;
+    const P = cp / ep;
+    const ilPct = (2 * Math.sqrt(P)) / (1 + P) - 1;
+    return {
+      ilPct: (ilPct * 100).toFixed(2),
+      ilAmount: dep > 0 ? Math.abs(ilPct) * dep : null,
+      isLoss: ilPct < -0.001,
+      barWidth: Math.min(Math.abs(ilPct) * 500, 100),
+    };
+  })();
 
-            {/* Underwriting Section */}
-            <div className="bg-[#13141C] border border-white/10 p-8 rounded-2xl">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-blue-400" />
+  const activePositions = positions.filter(p => p.status === 'ACTIVE');
+
+  return (
+    <div className="card card-purple p-6">
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <p className="font-data text-[10px] uppercase tracking-[0.18em] text-zinc-500 mb-1">Risk Analysis</p>
+          <h2 className="text-xl font-display font-bold tracking-tight">IL Checker</h2>
+        </div>
+        <TrendingDown className="w-5 h-5 text-purple-400 opacity-50" />
+      </div>
+
+      <div className="flex gap-1 p-1 rounded-xl bg-black/30 border border-white/[0.05] mb-6">
+        {(['positions', 'calculator'] as const).map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`flex-1 py-2 rounded-lg font-data text-[11px] uppercase tracking-widest transition-colors ${
+              tab === t ? 'bg-[#0D0E16] text-white' : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            {t === 'positions' ? 'My Positions' : 'Calculator'}
+          </button>
+        ))}
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={tab}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+        >
+          {tab === 'positions' && (
+            activePositions.length === 0 ? (
+              <div className="text-center py-10">
+                <TrendingDown className="w-8 h-8 mx-auto mb-2 text-zinc-700" />
+                <p className="font-data text-sm text-zinc-500">No active positions to analyse</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {activePositions.map(p => {
+                  const il = calcIL(p.entryPrice, currentPriceA);
+                  const ilPct = (il * 100).toFixed(2);
+                  const ilAmt = Math.abs(il) * parseFloat(formatUnits(p.amountA, 18));
+                  const isLoss = il < -0.001;
+                  return (
+                    <div key={p.positionId.toString()} className="stat-cell p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-data text-sm text-zinc-300">Position #{p.positionId.toString()}</span>
+                        <span className={`font-data text-sm font-medium ${isLoss ? 'text-red-400' : 'text-emerald-400'}`}>
+                          {il < 0 ? '' : '+'}{ilPct}%
+                        </span>
+                      </div>
+                      <div className="h-1 rounded-full bg-white/[0.05] mb-3 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${isLoss ? 'bg-red-500' : 'bg-emerald-500'}`}
+                          style={{ width: `${Math.min(Math.abs(il) * 500, 100)}%` }}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 font-data text-[11px] text-zinc-500 mb-2">
+                        <span>Entry: <span className="text-zinc-300">${formatUnits(p.entryPrice, 18).slice(0, 8)}</span></span>
+                        <span>Current: <span className="text-zinc-300">${currentPriceA}</span></span>
+                      </div>
+                      <div className={`font-data text-[11px] px-3 py-2 rounded-lg ${isLoss ? 'bg-red-500/8 text-red-400' : 'bg-emerald-500/8 text-emerald-400'}`}>
+                        {isLoss ? `~${ilAmt.toFixed(4)} Token A IL — covered by protocol` : 'No significant IL at current price'}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )
+          )}
+
+          {tab === 'calculator' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-500 mb-2">Entry Price ($)</label>
+                  <input type="number" min="0" placeholder="10.00" value={entryPrice} onChange={e => setEntryPrice(e.target.value)} className="input-field" />
                 </div>
                 <div>
-                  <h2 style={{
-                    fontSize: '20px',
-                    fontWeight: 700,
-                    fontFamily: '"Space Grotesk", "Inter", sans-serif'
-                  }}>Register Protocol Vault</h2>
-                  <p className="text-sm text-slate-400">Pay listing fee and deposit native collateral to mint IL Vouchers.</p>
+                  <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-500 mb-2">Current Price ($)</label>
+                  <input type="number" min="0" placeholder="15.00" value={currentPrice} onChange={e => setCurrentPrice(e.target.value)} className="input-field" />
                 </div>
               </div>
-
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Target Pair</label>
-                    <select className="w-full bg-[#0A0B10] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500/50">
-                      <option>DOT / USDC</option>
-                      <option>ASTR / DOT</option>
-                      <option>GLMR / USDC</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Collateral Deposit (Native Token)</label>
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        placeholder="0.00" 
-                        className="w-full bg-[#0A0B10] border border-white/10 rounded-xl pl-4 pr-16 py-3 text-white focus:outline-none focus:border-blue-500/50"
-                      />
-                      <button className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded">MAX</button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-[#0A0B10] border border-white/10 rounded-xl p-6 flex flex-col justify-center">
-                  <div className="flex justify-between items-center mb-3 text-sm">
-                    <span className="text-slate-400">Listing Fee + Premium</span>
-                    <span className="font-bold text-slate-300">2,500 USDC</span>
-                  </div>
-                  <div className="flex justify-between items-center mb-3 text-sm">
-                    <span className="text-slate-400">Fee Split</span>
-                    <span className="font-bold text-slate-300">40% Upfront / 60% Accrued</span>
-                  </div>
-                  <div className="flex justify-between items-center mb-6 text-sm pt-3 border-t border-white/10">
-                    <span className="text-slate-400">Vouchers to Mint</span>
-                    <span className="font-bold text-blue-400">450 ILV</span>
-                  </div>
-                  <button
-                    onClick={() => setVoucherModalOpen(true)}
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-4 rounded-xl font-bold transition-colors shadow-[0_0_20px_rgba(59,130,246,0.2)] flex items-center justify-center gap-2"
-                  >
-                    <FileSignature className="w-4 h-4" /> Propose Registration via Safe
-                  </button>
-                </div>
+              <div>
+                <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-500 mb-2">Deposit Amount (optional)</label>
+                <input type="number" min="0" placeholder="1000" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} className="input-field" />
               </div>
-            </div>
-          </motion.div>
-        )}
 
-        {activeTab === 'approvals' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-            <div className="bg-[#13141C] border border-white/10 rounded-2xl p-8 text-center mb-6">
-              <ShieldCheck className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
-              <h2 style={{
-                fontSize: '24px',
-                fontWeight: 700,
-                fontFamily: '"Space Grotesk", "Inter", sans-serif',
-                marginBottom: '8px'
-              }}>Safe Multi-sig Queue</h2>
-              <p className="text-slate-400 max-w-lg mx-auto">
-                Transactions proposed via the Conduir dApp are sent to your DAO's Safe. They require 3 out of 5 signatures to execute on-chain.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {[
-                { id: 'tx-892', action: 'Deposit 50,000 DOT', target: 'HydraDX Vault Router', status: '2/5 Signatures', time: '2 hours ago', ready: false },
-                { id: 'tx-891', action: 'Register Protocol Vault', target: 'IL Voucher Engine', status: '3/5 Signatures', time: '5 hours ago', ready: true },
-              ].map((tx, i) => (
-                <div key={i} className="bg-[#13141C] border border-white/10 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="flex items-center gap-4 w-full md:w-auto">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border ${tx.ready ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-orange-500/10 border-orange-500/20'}`}>
-                      {tx.ready ? <CheckCircle2 className="w-6 h-6 text-emerald-500" /> : <Clock className="w-6 h-6 text-orange-500" />}
-                    </div>
-                    <div>
-                      <div className="font-bold text-lg">{tx.action}</div>
-                      <div className="text-sm text-slate-400">Target: {tx.target}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-8 w-full md:w-auto">
-                    <div className="text-center md:text-left">
-                      <div className="text-xs text-slate-500 mb-1">Status</div>
-                      <div className={`font-bold ${tx.ready ? 'text-emerald-400' : 'text-orange-400'}`}>{tx.status}</div>
-                    </div>
-                    <div className="text-center md:text-left hidden sm:block">
-                      <div className="text-xs text-slate-500 mb-1">Proposed</div>
-                      <div className="font-medium text-slate-300">{tx.time}</div>
-                    </div>
-                    {tx.ready ? (
-                      <button className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-medium transition-colors">
-                        Execute Tx
-                      </button>
-                    ) : (
-                      <button className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2">
-                        <FileSignature className="w-4 h-4" /> Sign
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab === 'vouchers' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 style={{
-                fontSize: '20px',
-                fontWeight: 700,
-                fontFamily: '"Space Grotesk", "Inter", sans-serif'
-              }}>IL Voucher Engine</h2>
-              <button
-                onClick={() => setVoucherModalOpen(true)}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2"
-              >
-                <FileSignature className="w-4 h-4" /> Register Vault
-              </button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                { id: 'ILV-DOT-USDC', pool: 'DOT / USDC', amount: '450', status: 'Active', oracle: 'Chainlink', change: '+5.2%' },
-                { id: 'ILV-ASTR-DOT', pool: 'ASTR / DOT', amount: '1,200', status: 'Traded', oracle: 'Pyth', change: '-1.4%' },
-                { id: 'ILV-GLMR-USDC', pool: 'GLMR / USDC', amount: '850', status: 'Redeemed', oracle: 'Chainlink', change: '0.0%' },
-              ].map((voucher, i) => (
-                <button
-                  key={i}
-                  onClick={() => setVoucherModalOpen(true)}
-                  className="bg-[#13141C] border border-white/10 p-6 rounded-2xl hover:border-white/20 transition-colors relative overflow-hidden text-left w-full"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
-                      <Layers className="w-5 h-5 text-purple-400" />
-                    </div>
-                    <span className={`text-xs font-bold px-2 py-1 rounded uppercase tracking-wider ${
-                      voucher.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400' :
-                      voucher.status === 'Traded' ? 'bg-blue-500/10 text-blue-400' :
-                      'bg-slate-500/10 text-slate-400'
-                    }`}>
-                      {voucher.status}
+              {calcResult && (
+                <div className="stat-cell p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-500">IL Percentage</span>
+                    <span className={`font-data text-xl font-medium ${calcResult.isLoss ? 'text-red-400' : 'text-emerald-400'}`}>
+                      {calcResult.ilPct}%
                     </span>
                   </div>
-                  <div className="text-sm text-slate-400 mb-1">{voucher.pool} Risk Premium</div>
-                  <div className="text-2xl font-display font-bold mb-4">{voucher.amount} <span className="text-sm text-slate-500">ILV</span></div>
-                  <div className="flex justify-between items-center pt-4 border-t border-white/10">
-                    <div>
-                      <div className="text-xs text-slate-500">Oracle</div>
-                      <div className="font-medium text-sm">{voucher.oracle}</div>
+                  <div className="h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${calcResult.isLoss ? 'bg-red-500' : 'bg-emerald-500'}`}
+                      style={{ width: `${calcResult.barWidth}%` }}
+                    />
+                  </div>
+                  {calcResult.ilAmount !== null && (
+                    <div className="flex items-center justify-between pt-2 border-t border-white/[0.05]">
+                      <span className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-500">Estimated Loss</span>
+                      <span className="font-data text-sm text-red-400">{calcResult.ilAmount.toFixed(4)}</span>
                     </div>
-                    <div className={`text-sm font-medium ${voucher.change.startsWith('+') ? 'text-emerald-400' : voucher.change.startsWith('-') ? 'text-red-400' : 'text-slate-400'}`}>
-                      {voucher.change}
-                    </div>
+                  )}
+                  <div className="flex items-center gap-2 pt-2 border-t border-white/[0.05]">
+                    <Shield className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                    <p className="font-data text-[11px] text-emerald-400/70">On Conduir, this IL is covered by protocol collateral</p>
                   </div>
-                </button>
-              ))}
+                </div>
+              )}
             </div>
-          </motion.div>
-        )}
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
 
-        {activeTab === 'history' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-[#13141C] border border-white/10 rounded-2xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-white/5 border-b border-white/10">
-                  <tr>
-                    <th className="px-6 py-4 font-medium text-slate-400">Type</th>
-                    <th className="px-6 py-4 font-medium text-slate-400">Pool / Asset</th>
-                    <th className="px-6 py-4 font-medium text-slate-400">Amount</th>
-                    <th className="px-6 py-4 font-medium text-slate-400">Date</th>
-                    <th className="px-6 py-4 font-medium text-slate-400">Status</th>
-                    <th className="px-6 py-4 font-medium text-slate-400">Tx Hash</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {[
-                    { type: 'Deposit', pool: 'DOT / USDC', amount: '50,000 USDC', date: '2026-03-07 14:22', status: 'Completed', hash: '0x8f2a...3b9c' },
-                    { type: 'Underwrite', pool: 'ASTR / DOT', amount: '10,000 ASTR', date: '2026-03-05 09:15', status: 'Completed', hash: '0x1a4c...9d2e' },
-                    { type: 'Withdraw', pool: 'GLMR / USDC', amount: '25,000 USDC', date: '2026-03-01 18:45', status: 'Completed', hash: '0x5b7d...1f8a' },
-                    { type: 'Mint ILV', pool: 'ASTR / DOT', amount: '1,200 ILV', date: '2026-03-05 09:15', status: 'Completed', hash: '0x2c5e...4a1b' },
-                    { type: 'Deposit', pool: 'DOT / USDC', amount: '100,000 USDC', date: '2026-02-28 11:30', status: 'Completed', hash: '0x9e3f...6c2d' },
-                  ].map((tx, i) => (
-                    <tr key={i} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="px-6 py-4 font-medium">
-                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs ${
-                          tx.type === 'Deposit' ? 'bg-emerald-500/10 text-emerald-400' :
-                          tx.type === 'Withdraw' ? 'bg-orange-500/10 text-orange-400' :
-                          tx.type === 'Underwrite' ? 'bg-blue-500/10 text-blue-400' :
-                          'bg-purple-500/10 text-purple-400'
-                        }`}>
-                          {tx.type}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">{tx.pool}</td>
-                      <td className="px-6 py-4 font-medium">{tx.amount}</td>
-                      <td className="px-6 py-4 text-slate-400">{tx.date}</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1.5 text-emerald-400">
-                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> {tx.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-blue-400 hover:text-blue-300 cursor-pointer font-mono text-xs">{tx.hash}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-        )}
+export default function Dashboard() {
+  const { address, isConnected } = useAccount();
+  const [depositOpen, setDepositOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
+  const { positions, isLoading: positionsLoading, refetch: refetchPositions } = useUserPositions(address);
 
-        {activeTab === 'settings' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl space-y-8">
-            <div className="bg-[#13141C] border border-white/10 rounded-2xl p-6 md:p-8">
-              <h3 style={{
-                fontSize: '18px',
-                fontWeight: 700,
-                fontFamily: '"Space Grotesk", "Inter", sans-serif',
-                marginBottom: '24px',
-                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                paddingBottom: '16px'
-              }}>Notifications</h3>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium mb-1">Yield Updates</div>
-                    <div className="text-sm text-slate-400">Receive weekly summaries of your protected yield.</div>
-                  </div>
-                  <div className="w-12 h-6 bg-[#E6007A] rounded-full relative cursor-pointer">
-                    <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium mb-1">IL Liability Alerts</div>
-                    <div className="text-sm text-slate-400">Get notified when your underwritten IL liability spikes.</div>
-                  </div>
-                  <div className="w-12 h-6 bg-[#E6007A] rounded-full relative cursor-pointer">
-                    <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium mb-1">New Vaults</div>
-                    <div className="text-sm text-slate-400">Alerts when new institutional vaults are listed.</div>
-                  </div>
-                  <div className="w-12 h-6 bg-white/10 rounded-full relative cursor-pointer">
-                    <div className="absolute left-1 top-1 w-4 h-4 bg-slate-400 rounded-full" />
-                  </div>
-                </div>
+  return (
+    <div className="min-h-screen bg-[#07080D] grid-bg pt-20">
+      <div className="max-w-4xl mx-auto px-4 py-10 space-y-5">
+
+        <motion.div {...fadeUp} className="flex items-end justify-between">
+          <div>
+            <p className="font-data text-[10px] uppercase tracking-[0.2em] text-zinc-600 mb-1">Polkadot Hub TestNet</p>
+            <h1 className="text-3xl font-display font-bold tracking-tight">Conduir</h1>
+          </div>
+          {!isConnected && <WalletButton />}
+        </motion.div>
+
+        {!isConnected ? (
+          <motion.div {...fadeUp} transition={{ duration: 0.4 }} className="min-h-[55vh] flex items-center justify-center">
+            <div className="text-center max-w-sm">
+              <div className="w-20 h-20 rounded-3xl bg-[#E6007A]/10 border border-[#E6007A]/20 flex items-center justify-center mx-auto mb-6">
+                <Shield className="w-9 h-9 text-[#E6007A]" />
               </div>
-            </div>
-
-            <div className="bg-[#13141C] border border-white/10 rounded-2xl p-6 md:p-8">
-              <h3 style={{
-                fontSize: '18px',
-                fontWeight: 700,
-                fontFamily: '"Space Grotesk", "Inter", sans-serif',
-                marginBottom: '24px',
-                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                paddingBottom: '16px'
-              }}>Security & Multi-sig</h3>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium mb-1">Connected Safe</div>
-                    <div className="text-sm text-slate-400 font-mono">0x71C...9A23 (3/5 Signers Required)</div>
-                  </div>
-                  <button className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-medium transition-colors text-red-400 hover:text-red-300">
-                    Disconnect
-                  </button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium mb-1">Transaction Builder</div>
-                    <div className="text-sm text-slate-400">Push proposed transactions directly to Safe queue.</div>
-                  </div>
-                  <div className="w-12 h-6 bg-[#E6007A] rounded-full relative cursor-pointer">
-                    <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
-                  </div>
-                </div>
-              </div>
+              <h2 className="text-2xl font-display font-bold mb-2">Connect Wallet</h2>
+              <p className="font-data text-sm text-zinc-500 mb-8 leading-relaxed">
+                Connect to Polkadot Hub TestNet to deposit liquidity, track positions, and check IL.
+              </p>
+              <WalletButton />
             </div>
           </motion.div>
+        ) : (
+          <>
+            {[
+              <PoolCard key="pool" onDeposit={() => setDepositOpen(true)} />,
+              <PositionsCard
+                key="positions"
+                positions={positions}
+                isLoading={positionsLoading}
+                onWithdraw={p => { setSelectedPosition(p); setWithdrawOpen(true); }}
+                onRefresh={refetchPositions}
+              />,
+              <ILChecker key="il" positions={positions} />,
+            ].map((el, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: i * 0.09 }}>
+                {el}
+              </motion.div>
+            ))}
+          </>
         )}
-      </main>
 
-      {/* Flow Modals */}
-      <DepositFlow isOpen={depositModalOpen} onClose={() => setDepositModalOpen(false)} />
-      <VoucherFlow isOpen={voucherModalOpen} onClose={() => setVoucherModalOpen(false)} />
-      <FeeFlow isOpen={feeModalOpen} onClose={() => setFeeModalOpen(false)} />
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex flex-wrap gap-4 pt-2">
+          {[
+            { label: 'Router',      addr: '0x17e25f1f032161f6a3438ee01b91be756ec3a6e9' },
+            { label: 'ILVault',     addr: '0x68dc51f53857343ee09feb44b86772de4c9e89c9' },
+            { label: 'ConstantAMM', addr: '0x1508b920fee8dc674ce15b835d95e73166125c81' },
+          ].map(c => (
+            <a
+              key={c.label}
+              href={`${BLOCKSCOUT}/address/${c.addr}`}
+              target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 font-data text-[10px] uppercase tracking-widest text-zinc-600 hover:text-zinc-400 transition-colors"
+            >
+              <ExternalLink className="w-3 h-3" />
+              {c.label}
+            </a>
+          ))}
+        </motion.div>
+      </div>
+
+      <DepositFlow isOpen={depositOpen} onClose={() => setDepositOpen(false)} userAddress={address} onSuccess={refetchPositions} />
+      <WithdrawFlow isOpen={withdrawOpen} onClose={() => setWithdrawOpen(false)} position={selectedPosition} userAddress={address} onSuccess={refetchPositions} />
     </div>
   );
 }

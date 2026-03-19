@@ -56,15 +56,8 @@ export function useToken(tokenAddress: Address) {
   /**
    * Get token total supply
    */
-  const { data: totalSupply } = useReadContract({
-    address: tokenAddress,
-    abi: CONTRACT_ABIS.erc20,
-    functionName: 'totalSupply',
-  });
+  // totalSupply removed — not in current ERC20_ABI
 
-  /**
-   * Token info object
-   */
   const tokenInfo: TokenInfo = useMemo(
     () => ({
       address: tokenAddress,
@@ -75,7 +68,7 @@ export function useToken(tokenAddress: Address) {
     [tokenAddress, symbol, name, decimals]
   );
 
-  return { tokenInfo, totalSupply };
+  return { tokenInfo };
 }
 
 /**

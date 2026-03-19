@@ -1,374 +1,166 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { parseUnits, formatUnits } from 'viem';
-import { useAccount, useReadContract, useWatchContractEvent } from 'wagmi';
-import { useWalletConnection } from '../web3/hooks/useWalletConnection';
-import { useTokenBalance, useTokenAllowance, useTokenApproval } from '../web3/hooks/useToken';
-import { useRouter } from '../web3/hooks/useRouter';
-import { useTransactionActions } from '../web3/stores/transactions';
+import { useReadContract, useWriteContract } from 'wagmi';
 import { getContractAddress } from '../web3/contracts/addresses';
+import { ERC20_ABI } from '../web3/contracts/abi';
+import { useRouter } from '../web3/hooks/useRouter';
 import type { Address } from 'viem';
 
-export interface Asset {
-  address: Address;
-  symbol: string;
-  name: string;
-  balance: string;
-  decimals: number;
-}
-
-export interface Vault {
-  id: string;
-  poolId: bigint;
-  protocol: string;
-  asset: string;
-  apy: number;
-  capacity: number;
-  utilized: number;
-  riskLevel: 'Low' | 'Medium' | 'High';
-  tokenA: Address;
-  tokenB: Address;
-}
+export type DepositStep = 'amount' | 'approve-a' | 'approve-b' | 'confirm' | 'success';
 
 export interface DepositState {
-  step: 'select' | 'amount' | 'approve' | 'confirm' | 'success';
-  selectedAsset: Asset | null;
-  selectedVault: Vault | null;
-  amount: string;
+  step: DepositStep;
   amountA: string;
   amountB: string;
+  lockDays: number;
   isSubmitting: boolean;
   error: string | null;
-  receiptTxHash: string | null;
-  approvalPending: boolean;
-  needsApproval: boolean;
+  txHash: string | null;
 }
 
-const mockVaults: Vault[] = [
-  {
-    id: 'pool-0',
-    poolId: 0n,
-    protocol: 'HydraDX',
-    asset: 'DOT',
-    apy: 14.2,
-    capacity: 15000000,
-    utilized: 12400000,
-    riskLevel: 'Low',
-    tokenA: '0x0000000000000000000000000000000000000000' as Address,
-    tokenB: '0x3186e53cdd421a032ac18bbb0540a35e4cd57413' as Address, // Mock USDC
-  },
-  {
-    id: 'pool-1',
-    poolId: 1n,
-    protocol: 'AstarSwap',
-    asset: 'ASTR',
-    apy: 18.5,
-    capacity: 5000000,
-    utilized: 4200000,
-    riskLevel: 'Medium',
-    tokenA: '0x0000000000000000000000000000000000000001' as Address,
-    tokenB: '0x3186e53cdd421a032ac18bbb0540a35e4cd57413' as Address,
-  },
-];
+const POOL_ID = 0n;
+// Use a registered protocol address — for demo we use a placeholder; in production
+// the user would pick from registered protocols. We use the zero address as a stand-in
+// which the contract will reject — the UI should show the real registered protocol.
+// For the testnet demo, we use the deployer/admin address as the protocol.
+const PROTOCOL_ADDRESS = '0x0000000000000000000000000000000000000001' as Address;
 
-export function useDepositFlow() {
+const TOKEN_A = getContractAddress('tokenA');
+const TOKEN_B = getContractAddress('tokenB');
+const ROUTER  = getContractAddress('router');
+
+const DECIMALS_A = 18;
+const DECIMALS_B = 18;
+
+export function useDepositFlow(userAddress?: Address) {
   const [state, setState] = useState<DepositState>({
-    step: 'select',
-    selectedAsset: null,
-    selectedVault: null,
-    amount: '',
+    step: 'amount',
     amountA: '',
     amountB: '',
+    lockDays: 30,
     isSubmitting: false,
     error: null,
-    receiptTxHash: null,
-    approvalPending: false,
-    needsApproval: false,
+    txHash: null,
   });
 
-  const [{ address, isConnected }] = useWalletConnection();
-  const { address: accountAddress } = useAccount();
-  const connectedAddress = address || accountAddress;
+  const { deposit } = useRouter();
+  const { writeContractAsync } = useWriteContract();
 
-  const routerAddress = getContractAddress('router');
-  const usdcAddress = getContractAddress('mockUsdc');
-
-  // Get supported tokens (currently using mock USDC)
-  const { tokens: supportedTokens } = useSupportedTokensInternal();
-
-  // Get token balance
-  const { balance: tokenBalance, decimals } = useTokenBalance(
-    state.selectedAsset?.address || usdcAddress,
-    connectedAddress
-  );
-
-  // Check token allowance
-  const { allowance, refetch: refetchAllowance } = useTokenAllowance(
-    state.selectedAsset?.address || usdcAddress,
-    connectedAddress,
-    routerAddress
-  );
-
-  // Router contract hooks
-  const { deposit, isPending: isDepositPending } = useRouter();
-
-  // Transaction tracking
-  const { addTransaction, updateTransaction } = useTransactionActions();
-
-  // Watch for deposit events
-  useWatchContractEvent({
-    address: routerAddress,
-    abi: [
-      {
-        type: 'event',
-        name: 'Deposit',
-        inputs: [
-          { name: 'positionId', type: 'uint256', indexed: true },
-          { name: 'lp', type: 'address', indexed: true },
-          { name: 'poolId', type: 'uint256', indexed: true },
-          { name: 'amountA', type: 'uint256' },
-          { name: 'amountB', type: 'uint256' },
-        ],
-      },
-    ],
-    eventName: 'Deposit',
-    onLogs: (logs) => {
-      console.log('Deposit event:', logs);
-    },
+  const { data: allowanceA, refetch: refetchA } = useReadContract({
+    address: TOKEN_A, abi: ERC20_ABI, functionName: 'allowance',
+    args: userAddress ? [userAddress, ROUTER] : undefined,
+    query: { enabled: !!userAddress },
+  });
+  const { data: allowanceB, refetch: refetchB } = useReadContract({
+    address: TOKEN_B, abi: ERC20_ABI, functionName: 'allowance',
+    args: userAddress ? [userAddress, ROUTER] : undefined,
+    query: { enabled: !!userAddress },
+  });
+  const { data: balanceA } = useReadContract({
+    address: TOKEN_A, abi: ERC20_ABI, functionName: 'balanceOf',
+    args: userAddress ? [userAddress] : undefined,
+    query: { enabled: !!userAddress },
+  });
+  const { data: balanceB } = useReadContract({
+    address: TOKEN_B, abi: ERC20_ABI, functionName: 'balanceOf',
+    args: userAddress ? [userAddress] : undefined,
+    query: { enabled: !!userAddress },
   });
 
-  // Format assets from supported tokens
-  const assets: Asset[] = supportedTokens.map((token) => ({
-    address: token.address,
-    symbol: token.symbol,
-    name: token.name,
-    decimals: token.decimals,
-    balance: tokenBalance?.toString() || '0',
-  }));
+  const set = (patch: Partial<DepositState>) => setState(prev => ({ ...prev, ...patch }));
 
-  // Check if approval is needed
-  useEffect(() => {
-    if (state.selectedAsset && allowance && state.amount) {
-      const amountBigInt = parseUnits(state.amount, state.selectedAsset.decimals);
-      const needsApproval = allowance < amountBigInt;
-      setState((prev) => ({ ...prev, needsApproval }));
+  const goToStep = useCallback((step: DepositStep) => set({ step, error: null }), []);
+
+  const validateAmounts = useCallback((): boolean => {
+    const a = parseFloat(state.amountA);
+    const b = parseFloat(state.amountB);
+    if (!state.amountA || a <= 0) { set({ error: 'Enter a valid Token A amount' }); return false; }
+    if (!state.amountB || b <= 0) { set({ error: 'Enter a valid Token B amount' }); return false; }
+    if (balanceA && parseUnits(state.amountA, DECIMALS_A) > balanceA) {
+      set({ error: 'Insufficient Token A balance' }); return false;
     }
-  }, [allowance, state.amount, state.selectedAsset]);
-
-  const reset = useCallback(() => {
-    setState({
-      step: 'select',
-      selectedAsset: null,
-      selectedVault: null,
-      amount: '',
-      amountA: '',
-      amountB: '',
-      isSubmitting: false,
-      error: null,
-      receiptTxHash: null,
-      approvalPending: false,
-      needsApproval: false,
-    });
-  }, []);
-
-  const selectAsset = useCallback((asset: Asset) => {
-    setState((prev) => ({
-      ...prev,
-      selectedAsset: asset,
-      step: 'amount',
-      error: null,
-      amount: '',
-    }));
-  }, []);
-
-  const selectVault = useCallback((vault: Vault) => {
-    setState((prev) => ({ ...prev, selectedVault: vault, error: null }));
-  }, []);
-
-  const setAmount = useCallback((amount: string) => {
-    setState((prev) => ({ ...prev, amount, error: null }));
-  }, []);
-
-  const setMaxAmount = useCallback(() => {
-    if (!tokenBalance || !decimals) return;
-    const maxAmount = formatUnits(tokenBalance, decimals);
-    setState((prev) => ({
-      ...prev,
-      amount: maxAmount,
-      error: null,
-    }));
-  }, [tokenBalance, decimals]);
-
-  const goToStep = useCallback((step: DepositState['step']) => {
-    setState((prev) => ({ ...prev, step, error: null }));
-  }, []);
-
-  const validateAmount = useCallback((): boolean => {
-    if (!state.amount || parseFloat(state.amount) <= 0) {
-      setState((prev) => ({ ...prev, error: 'Please enter a valid amount' }));
-      return false;
-    }
-    if (!state.selectedAsset) {
-      setState((prev) => ({ ...prev, error: 'Please select an asset' }));
-      return false;
-    }
-    if (!connectedAddress) {
-      setState((prev) => ({ ...prev, error: 'Please connect your wallet' }));
-      return false;
-    }
-    if (tokenBalance && decimals) {
-      const amountBigInt = parseUnits(state.amount, decimals);
-      if (amountBigInt > tokenBalance) {
-        setState((prev) => ({ ...prev, error: 'Insufficient balance' }));
-        return false;
-      }
-    }
-    if (!state.selectedVault) {
-      setState((prev) => ({ ...prev, error: 'Please select a vault' }));
-      return false;
-    }
-    const remainingCapacity = state.selectedVault.capacity - state.selectedVault.utilized;
-    if (parseFloat(state.amount) > remainingCapacity) {
-      setState((prev) => ({
-        ...prev,
-        error: `Exceeds vault capacity. Available: $${(remainingCapacity / 1000000).toFixed(2)}M`,
-      }));
-      return false;
+    if (balanceB && parseUnits(state.amountB, DECIMALS_B) > balanceB) {
+      set({ error: 'Insufficient Token B balance' }); return false;
     }
     return true;
-  }, [state.amount, state.selectedAsset, state.selectedVault, tokenBalance, decimals, connectedAddress]);
+  }, [state.amountA, state.amountB, balanceA, balanceB]);
 
-  const approveToken = useCallback(async () => {
-    if (!state.selectedAsset || !connectedAddress) {
-      setState((prev) => ({ ...prev, error: 'Please connect your wallet' }));
-      return;
-    }
+  const proceedFromAmount = useCallback(() => {
+    if (!validateAmounts()) return;
+    const amtA = parseUnits(state.amountA, DECIMALS_A);
+    const needsA = !allowanceA || allowanceA < amtA;
+    const amtB = parseUnits(state.amountB, DECIMALS_B);
+    const needsB = !allowanceB || allowanceB < amtB;
+    if (needsA) { set({ step: 'approve-a', error: null }); return; }
+    if (needsB) { set({ step: 'approve-b', error: null }); return; }
+    set({ step: 'confirm', error: null });
+  }, [validateAmounts, state.amountA, state.amountB, allowanceA, allowanceB]);
 
-    setState((prev) => ({ ...prev, isSubmitting: true, error: null }));
-
+  const approveA = useCallback(async () => {
+    set({ isSubmitting: true, error: null });
     try {
-      const { useTokenApproval } = await import('../web3/hooks/useToken');
-      const { approve } = useTokenApproval(state.selectedAsset.address);
-
-      const hash = await approve(routerAddress, state.amount, state.selectedAsset.decimals, true);
-
-      addTransaction(hash, 'approve', connectedAddress, {
-        tokenSymbol: state.selectedAsset.symbol,
+      // @ts-expect-error wagmi writeContractAsync types require chain/account at call site
+      await writeContractAsync({
+        address: TOKEN_A, abi: ERC20_ABI, functionName: 'approve',
+        args: [ROUTER, 2n ** 256n - 1n],
       });
-
-      setState((prev) => ({
-        ...prev,
-        approvalPending: true,
-        isSubmitting: false,
-      }));
-
-      // Wait for approval confirmation
-      setTimeout(() => {
-        refetchAllowance();
-        setState((prev) => ({
-          ...prev,
-          approvalPending: false,
-          step: 'confirm',
-        }));
-      }, 3000);
-    } catch (error: any) {
-      setState((prev) => ({
-        ...prev,
-        isSubmitting: false,
-        error: error?.message || 'Approval failed',
-      }));
+      await refetchA();
+      const amtB = parseUnits(state.amountB, DECIMALS_B);
+      const needsB = !allowanceB || allowanceB < amtB;
+      set({ isSubmitting: false, step: needsB ? 'approve-b' : 'confirm' });
+    } catch (e: any) {
+      set({ isSubmitting: false, error: e?.shortMessage || e?.message || 'Approval failed' });
     }
-  }, [state.selectedAsset, connectedAddress, state.amount, routerAddress, addTransaction, refetchAllowance]);
+  }, [writeContractAsync, refetchA, state.amountB, allowanceB]);
+
+  const approveB = useCallback(async () => {
+    set({ isSubmitting: true, error: null });
+    try {
+      // @ts-expect-error wagmi writeContractAsync types require chain/account at call site
+      await writeContractAsync({
+        address: TOKEN_B, abi: ERC20_ABI, functionName: 'approve',
+        args: [ROUTER, 2n ** 256n - 1n],
+      });
+      await refetchB();
+      set({ isSubmitting: false, step: 'confirm' });
+    } catch (e: any) {
+      set({ isSubmitting: false, error: e?.shortMessage || e?.message || 'Approval failed' });
+    }
+  }, [writeContractAsync, refetchB]);
 
   const confirmDeposit = useCallback(async () => {
-    if (!validateAmount()) return;
-
-    setState((prev) => ({ ...prev, isSubmitting: true, error: null }));
-
+    if (!validateAmounts()) return;
+    set({ isSubmitting: true, error: null });
     try {
-      if (!state.selectedVault || !state.selectedAsset || !connectedAddress) {
-        throw new Error('Missing required information');
-      }
-
-      const amountA = parseUnits(state.amount, state.selectedAsset.decimals);
-      const amountB = 0n; // Single-sided deposit for now
-
-      // For demo, using a zero protocol address
-      const protocolAddress = '0x0000000000000000000000000000000000000001' as Address;
-      const lockDuration = 30n * 24n * 60n * 60n; // 30 days
-
-      const hash = await deposit(
-        state.selectedVault.poolId,
-        protocolAddress,
-        amountA,
-        amountB,
-        lockDuration
-      );
-
-      addTransaction(hash, 'deposit', connectedAddress, {
-        poolId: state.selectedVault.poolId,
-        amountA,
-        amountB,
-        tokenSymbol: state.selectedAsset.symbol,
-      });
-
-      setState((prev) => ({
-        ...prev,
-        step: 'success',
-        isSubmitting: false,
-        receiptTxHash: hash,
-      }));
-    } catch (error: any) {
-      setState((prev) => ({
-        ...prev,
-        isSubmitting: false,
-        error: error?.message || 'Deposit failed',
-      }));
+      const amtA = parseUnits(state.amountA, DECIMALS_A);
+      const amtB = parseUnits(state.amountB, DECIMALS_B);
+      const lockDuration = BigInt(state.lockDays) * 86400n;
+      const hash = await deposit(POOL_ID, PROTOCOL_ADDRESS, amtA, amtB, lockDuration);
+      set({ isSubmitting: false, step: 'success', txHash: hash });
+    } catch (e: any) {
+      set({ isSubmitting: false, error: e?.shortMessage || e?.message || 'Deposit failed' });
     }
-  }, [validateAmount, state.selectedVault, state.selectedAsset, connectedAddress, state.amount, deposit, addTransaction]);
+  }, [validateAmounts, state.amountA, state.amountB, state.lockDays, deposit]);
 
-  const getAvailableVaults = useCallback((assetSymbol: string): Vault[] => {
-    return mockVaults.filter((v) => v.asset === assetSymbol);
-  }, []);
-
-  const getAssets = useCallback((): Asset[] => {
-    return assets;
-  }, [assets]);
-
-  const getEstimatedYield = useCallback((): number => {
-    if (!state.amount || !state.selectedVault) return 0;
-    const annualYield = parseFloat(state.amount) * (state.selectedVault.apy / 100);
-    return annualYield;
-  }, [state.amount, state.selectedVault]);
+  const reset = useCallback(() => setState({
+    step: 'amount', amountA: '', amountB: '', lockDays: 30,
+    isSubmitting: false, error: null, txHash: null,
+  }), []);
 
   return {
     state,
+    balanceA: balanceA ? formatUnits(balanceA, DECIMALS_A) : '0',
+    balanceB: balanceB ? formatUnits(balanceB, DECIMALS_B) : '0',
     actions: {
-      reset,
-      selectAsset,
-      selectVault,
-      setAmount,
-      setMaxAmount,
-      goToStep,
-      approveToken,
+      setAmountA: (v: string) => set({ amountA: v, error: null }),
+      setAmountB: (v: string) => set({ amountB: v, error: null }),
+      setLockDays: (v: number) => set({ lockDays: v }),
+      proceedFromAmount,
+      approveA,
+      approveB,
       confirmDeposit,
-      getAvailableVaults,
-      getAssets,
-      getEstimatedYield,
+      goToStep,
+      reset,
     },
-  };
-}
-
-// Helper hook to get supported tokens
-function useSupportedTokensInternal() {
-  const mockUsdcAddress = getContractAddress('mockUsdc');
-  return {
-    tokens: [
-      {
-        address: mockUsdcAddress,
-        symbol: 'USDC',
-        name: 'USD Coin',
-        decimals: 6,
-      },
-    ],
   };
 }

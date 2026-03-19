@@ -112,7 +112,7 @@ export function WalletButton({
           <AlertCircle className="w-4 h-4 text-amber-500" />
         )}
         {showBalance && (
-          <span className="text-slate-400">{formattedBalance} DOT</span>
+          <span className="text-slate-400">{formattedBalance} PAS</span>
         )}
         <span className="text-white">{address && formatAddress(address)}</span>
         <ChevronDown
@@ -166,7 +166,7 @@ export function WalletButton({
                 <div className="p-4 border-b border-white/10">
                   <div className="text-xs text-slate-500 mb-1">Balance</div>
                   <div className="text-lg font-semibold text-white">
-                    {formattedBalance} DOT
+                    {formattedBalance} PAS
                   </div>
                 </div>
               )}
@@ -181,7 +181,7 @@ export function WalletButton({
                         Wrong Network
                       </div>
                       <div className="text-xs text-amber-400/80 mt-1">
-                        Please switch to Polkadot Asset Hub testnet
+                      Please switch to Polkadot Hub TestNet
                       </div>
                     </div>
                   </div>
@@ -197,7 +197,7 @@ export function WalletButton({
               {/* Actions */}
               <div className="p-2">
                 <a
-                  href={`https://explorer.polkadot.io/address/${address}`}
+                  href={`https://blockscout-testnet.polkadot.io/address/${address}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 px-3 py-2 hover:bg-white/5 rounded-lg text-sm text-slate-300 hover:text-white transition-colors"
