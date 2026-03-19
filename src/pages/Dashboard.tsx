@@ -221,12 +221,14 @@ function ILChecker({ positions }: { positions: Position[] }) {
     const ep = parseFloat(entryPrice), cp = parseFloat(currentPrice), dep = parseFloat(depositAmount);
     if (!ep || !cp || ep <= 0 || cp <= 0) return null;
     const P = cp / ep;
-    const ilPct = (2 * Math.sqrt(P)) / (1 + P) - 1;
+    // IL is always a loss vs. holding, symmetric regardless of price direction
+    const il = (2 * Math.sqrt(P)) / (1 + P) - 1;
+    const ilPctAbs = Math.abs(il) * 100;
     return {
-      ilPct: (ilPct * 100).toFixed(2),
-      ilAmount: dep > 0 ? Math.abs(ilPct) * dep : null,
-      isLoss: ilPct < -0.001,
-      barWidth: Math.min(Math.abs(ilPct) * 500, 100),
+      ilPct: ilPctAbs.toFixed(2),
+      ilAmount: dep > 0 ? Math.abs(il) * dep : null,
+      barWidth: Math.min(ilPctAbs * 10, 100), // 10% IL = full bar
+      priceDir: cp > ep ? 'up' : cp < ep ? 'down' : 'unchanged',
     };
   })();
 
@@ -318,33 +320,39 @@ function ILChecker({ positions }: { positions: Position[] }) {
                 </div>
               </div>
               <div>
-                <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600 mb-2">Deposit Amount (optional)</label>
+                <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600 mb-2">Deposit Amount <span className="text-zinc-700 normal-case">(optional)</span></label>
                 <input type="number" min="0" placeholder="1000" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} className="input-field" />
+                <p className="font-data text-[10px] text-zinc-700 mt-1">Enter in any currency — result will be in the same unit</p>
               </div>
 
               {calcResult && (
                 <div className="stat-cell p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600">IL Percentage</span>
-                    <span className={`font-data text-xl font-medium ${calcResult.isLoss ? 'text-red-400' : 'text-emerald-400'}`}>
-                      {calcResult.ilPct}%
+                    <div>
+                      <span className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600">IL vs. Holding</span>
+                      <p className="font-data text-[10px] text-zinc-700 mt-0.5">
+                        Price {calcResult.priceDir === 'up' ? '↑ went up' : calcResult.priceDir === 'down' ? '↓ went down' : '— unchanged'}
+                      </p>
+                    </div>
+                    <span className="font-data text-xl font-medium text-amber-400">
+                      -{calcResult.ilPct}%
                     </span>
                   </div>
                   <div className="h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ${calcResult.isLoss ? 'bg-red-500' : 'bg-emerald-500'}`}
+                      className="h-full rounded-full bg-amber-500 transition-all duration-500"
                       style={{ width: `${calcResult.barWidth}%` }}
                     />
                   </div>
                   {calcResult.ilAmount !== null && (
                     <div className="flex items-center justify-between pt-2 border-t border-white/[0.05]">
                       <span className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600">Estimated Loss</span>
-                      <span className="font-data text-sm text-red-400">{calcResult.ilAmount.toFixed(4)}</span>
+                      <span className="font-data text-sm text-amber-400">{calcResult.ilAmount.toFixed(4)} <span className="text-zinc-600">(deposit units)</span></span>
                     </div>
                   )}
-                  <div className="flex items-center gap-2 pt-2 border-t border-white/[0.05]">
-                    <Shield className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-                    <p className="font-data text-[11px] text-emerald-400/70">On Conduir, this IL is covered by protocol collateral</p>
+                  <div className="flex items-start gap-2 pt-2 border-t border-white/[0.05]">
+                    <Shield className="w-3 h-3 text-emerald-400 flex-shrink-0 mt-0.5" />
+                    <p className="font-data text-[11px] text-emerald-400/70">IL is the same whether price goes up or down. On Conduir, it's covered by protocol collateral.</p>
                   </div>
                 </div>
               )}
