@@ -29,7 +29,7 @@ export function useToken(tokenAddress: Address) {
   /**
    * Get token decimals
    */
-  const { data: decimals = 18 } = useReadContract({
+  const { data: decimals = 18, error: decimalsError } = useReadContract({
     address: tokenAddress,
     abi: CONTRACT_ABIS.erc20,
     functionName: 'decimals',
@@ -38,7 +38,7 @@ export function useToken(tokenAddress: Address) {
   /**
    * Get token symbol
    */
-  const { data: symbol } = useReadContract({
+  const { data: symbol, error: symbolError } = useReadContract({
     address: tokenAddress,
     abi: CONTRACT_ABIS.erc20,
     functionName: 'symbol',
@@ -47,7 +47,7 @@ export function useToken(tokenAddress: Address) {
   /**
    * Get token name
    */
-  const { data: name } = useReadContract({
+  const { data: name, error: nameError } = useReadContract({
     address: tokenAddress,
     abi: CONTRACT_ABIS.erc20,
     functionName: 'name',
@@ -68,7 +68,10 @@ export function useToken(tokenAddress: Address) {
     [tokenAddress, symbol, name, decimals]
   );
 
-  return { tokenInfo };
+  return {
+    tokenInfo,
+    error: decimalsError || symbolError || nameError,
+  };
 }
 
 /**
@@ -78,7 +81,7 @@ export function useToken(tokenAddress: Address) {
  * @param owner - The address to check balance for
  */
 export function useTokenBalance(tokenAddress: Address, owner?: Address) {
-  const { data: balance, refetch } = useReadContract({
+  const { data: balance, refetch, error: balanceError } = useReadContract({
     address: tokenAddress,
     abi: CONTRACT_ABIS.erc20,
     functionName: 'balanceOf',
@@ -88,7 +91,7 @@ export function useTokenBalance(tokenAddress: Address, owner?: Address) {
     },
   });
 
-  const { data: decimals = 18 } = useReadContract({
+  const { data: decimals = 18, error: decimalsError } = useReadContract({
     address: tokenAddress,
     abi: CONTRACT_ABIS.erc20,
     functionName: 'decimals',
@@ -104,6 +107,7 @@ export function useTokenBalance(tokenAddress: Address, owner?: Address) {
     formattedBalance,
     decimals,
     refetch,
+    error: balanceError || decimalsError,
   };
 }
 

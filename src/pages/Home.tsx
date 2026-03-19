@@ -1,40 +1,22 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, Shield, Activity, Layers, Lock, Zap, ChevronRight, BookOpen, BarChart3, Wallet, ChevronLeft, CheckCircle2, Coins, FileText, TrendingUp } from 'lucide-react';
+import { ArrowRight, Shield, Activity, Layers, Lock, Zap, BookOpen, BarChart3, Wallet, ChevronLeft, CheckCircle2, Coins, FileText, TrendingUp, ChevronRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const Hero = () => {
   const navigate = useNavigate();
   return (
-    <section
-      style={{
-        paddingTop: '160px',
-        paddingBottom: '96px',
-        paddingLeft: '24px',
-        paddingRight: '24px',
-        position: 'relative',
-        overflow: 'hidden',
-        background: 'linear-gradient(180deg, #0A0B10 0%, #13141C 100%)'
-      }}
-    >
-      {/* Background glow */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '800px',
-          height: '800px',
-          background: 'radial-gradient(circle, rgba(230,0,122,0.15) 0%, transparent 70%)',
-          borderRadius: '50%',
-          filter: 'blur(120px)',
-          opacity: '0.6',
-          pointerEvents: 'none'
-        }}
-      />
+    <section className="relative overflow-hidden" style={{ paddingTop: '160px', paddingBottom: '96px' }}>
+      {/* Background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#08090F] via-[#0A0B12] to-[#050508]" />
 
-      <div style={{ maxWidth: '80rem', margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 10 }}>
+      {/* Ambient glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#FF0877]/10 rounded-full blur-[120px] opacity-60 pointer-events-none" />
+
+      {/* Grid pattern overlay */}
+      <div className="absolute inset-0 grid-bg opacity-30" />
+
+      <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -45,31 +27,10 @@ const Hero = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '8px 16px',
-              borderRadius: '9999px',
-              marginBottom: '32px',
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              backdropFilter: 'blur(10px)'
-            }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 bg-white/[0.03] border border-white/[0.08] backdrop-blur-sm"
           >
-            <span
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: '#E6007A',
-                boxShadow: '0 0 10px rgba(230,0,122,0.5)',
-                animation: 'pulse 2s infinite'
-              }}
-            />
-            <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-sans)' }}>
-              Built for the Polkadot Hub
-            </span>
+            <span className="w-2 h-2 rounded-full bg-[#FF0877] shadow-[0_0_10px_rgba(255,8,119,0.6)] animate-pulse" />
+            <span className="text-sm text-zinc-400 font-sans">Built for Polkadot Hub</span>
           </motion.div>
 
           {/* Main heading */}
@@ -77,28 +38,11 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            style={{
-              fontSize: 'clamp(48px, 8vw, 80px)',
-              fontWeight: 700,
-              lineHeight: 1.1,
-              letterSpacing: '-0.02em',
-              marginBottom: '32px',
-              fontFamily: '"Space Grotesk", "Inter", sans-serif'
-            }}
+            className="text-[clamp(48px,8vw,76px)] font-display font-bold leading-[1.1] tracking-tight mb-8"
           >
-            Liquidity Without{' '}
+            Liquidity Without
             <br />
-            <span
-              style={{
-                background: 'linear-gradient(135deg, #E6007A 0%, #9333EA 50%, #7C3AED 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                display: 'inline-block'
-              }}
-            >
-              The Liability.
-            </span>
+            <span className="text-gradient-primary">The Liability.</span>
           </motion.h1>
 
           {/* Description */}
@@ -106,14 +50,7 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            style={{
-              fontSize: 'clamp(18px, 2vw, 22px)',
-              color: 'rgba(161, 161, 170, 1)',
-              lineHeight: 1.7,
-              maxWidth: '48rem',
-              margin: '0 auto 48px',
-              fontFamily: 'var(--font-sans)'
-            }}
+            className="text-[clamp(17px,2vw,20px]] text-zinc-400 leading-relaxed max-w-2xl mx-auto mb-12 font-sans"
           >
             Conduir separates Impermanent Loss from liquidity provision. DAO Treasuries earn protected yield. Protocols secure stable, non-mercenary liquidity.
           </motion.p>
@@ -123,55 +60,21 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}
+            className="flex flex-wrap items-center justify-center gap-4"
           >
             <Link
               to="/app"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                padding: '16px 32px',
-                borderRadius: '12px',
-                fontWeight: 600,
-                fontSize: '16px',
-                background: 'linear-gradient(135deg, #E6007A 0%, #C20066 100%)',
-                color: '#FFFFFF',
-                boxShadow: '0 0 40px rgba(230, 0, 122, 0.3)',
-                minWidth: '180px',
-                textDecoration: 'none',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                fontFamily: 'var(--font-sans)'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              className="group inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-gradient-to-br from-[#FF0877] to-[#E6006A] text-white font-semibold text-base shadow-[0_0_40px_rgba(255,8,119,0.25)] transition-all duration-300 hover:shadow-[0_0_60px_rgba(255,8,119,0.4)] hover:-translate-y-1"
             >
-              Launch dApp <ArrowRight style={{ width: '20px', height: '20px' }} />
+              Launch dApp
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
               to="/docs"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                padding: '16px 32px',
-                borderRadius: '12px',
-                fontWeight: 600,
-                fontSize: '16px',
-                background: '#13141C',
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: '#FFFFFF',
-                minWidth: '180px',
-                textDecoration: 'none',
-                transition: 'transform 0.2s, background 0.2s',
-                fontFamily: 'var(--font-sans)'
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = '#13141C'; }}
+              className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-[#0C0C12] border border-white/[0.08] text-white font-semibold text-base transition-all duration-300 hover:bg-white/[0.05] hover:border-white/[0.15]"
             >
-              Read the Docs <BookOpen style={{ width: '20px', height: '20px' }} />
+              Read the Docs
+              <BookOpen className="w-5 h-5" />
             </Link>
           </motion.div>
         </motion.div>
@@ -181,43 +84,28 @@ const Hero = () => {
 };
 
 const Problem = () => (
-  <section id="problem" className="py-24 px-6 bg-[#0A0B10]">
-    <div className="max-w-7xl mx-auto">
+  <section id="problem" className="py-24 px-6 bg-[#050508]">
+    <div className="max-w-6xl mx-auto">
       <div className="text-center mb-16">
-        <h2 style={{
-          fontSize: 'clamp(24px, 3vw, 32px)',
-          fontWeight: 700,
-          marginBottom: '16px',
-          fontFamily: '"Space Grotesk", "Inter", sans-serif'
-        }}>The Liquidity Dilemma</h2>
-        <p style={{
-          color: 'rgba(161, 161, 170, 1)',
-          maxWidth: '42rem',
-          margin: '0 auto',
-          fontFamily: 'var(--font-sans)',
-          fontSize: 'var(--text-base)'
-        }}>Current AMM models force a compromise between capital efficiency and risk, creating a broken system for institutional players.</p>
+        <h2 className="text-[clamp(26px,3vw,32px)] font-display font-bold mb-4">The Liquidity Dilemma</h2>
+        <p className="text-zinc-500 max-w-2xl mx-auto text-sm">
+          Current AMM models force a compromise between capital efficiency and risk, creating a broken system for institutional players.
+        </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid md:grid-cols-2 gap-6">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          className="bg-[#13141C] border border-white/5 p-8 rounded-2xl relative overflow-hidden"
+          className="card card-pink p-8 relative overflow-hidden group"
         >
-          <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 blur-[50px]" />
-          <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center mb-6">
-            <Activity className="w-6 h-6 text-red-500" />
+          <div className="absolute top-0 right-0 w-40 h-40 bg-red-500/5 blur-[60px] group-hover:bg-red-500/10 transition-colors" />
+          <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center mb-6 relative">
+            <Activity className="w-7 h-7 text-red-400" />
           </div>
-          <h3 style={{
-            fontSize: 'var(--text-xl)',
-            fontWeight: 700,
-            marginBottom: '12px',
-            fontFamily: '"Space Grotesk", "Inter", sans-serif',
-            color: '#FFFFFF'
-          }}>For DAO Treasuries: The IL Trap</h3>
-          <p style={{ color: 'rgba(161, 161, 170, 1)', lineHeight: 1.6, fontFamily: 'var(--font-sans)' }}>
+          <h3 className="text-xl font-display font-bold mb-3 text-white">For DAO Treasuries: The IL Trap</h3>
+          <p className="text-zinc-500 text-sm leading-relaxed">
             Providing liquidity exposes treasuries to Impermanent Loss (IL). This existential risk makes traditional AMMs unsuitable for conservative treasury management, leaving capital idle.
           </p>
         </motion.div>
@@ -226,20 +114,14 @@ const Problem = () => (
           initial={{ opacity: 0, x: 20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          className="bg-[#13141C] border border-white/5 p-8 rounded-2xl relative overflow-hidden"
+          className="card card-amber p-8 relative overflow-hidden group"
         >
-          <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 blur-[50px]" />
-          <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center mb-6">
-            <Zap className="w-6 h-6 text-orange-500" />
+          <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/5 blur-[60px] group-hover:bg-amber-500/10 transition-colors" />
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-6 relative">
+            <Zap className="w-7 h-7 text-amber-400" />
           </div>
-          <h3 style={{
-            fontSize: 'var(--text-xl)',
-            fontWeight: 700,
-            marginBottom: '12px',
-            fontFamily: '"Space Grotesk", "Inter", sans-serif',
-            color: '#FFFFFF'
-          }}>For Protocols: Mercenary Capital</h3>
-          <p style={{ color: 'rgba(161, 161, 170, 1)', lineHeight: 1.6, fontFamily: 'var(--font-sans)' }}>
+          <h3 className="text-xl font-display font-bold mb-3 text-white">For Protocols: Mercenary Capital</h3>
+          <p className="text-zinc-500 text-sm leading-relaxed">
             High token emissions attract transient liquidity that vanishes the moment incentives dry up. Protocols bleed native tokens just to rent unstable market depth.
           </p>
         </motion.div>
@@ -249,46 +131,37 @@ const Problem = () => (
 );
 
 const Solution = () => (
-  <section id="solution" className="py-24 px-6 border-y border-white/5 bg-[#0A0B10]/50">
-    <div className="max-w-7xl mx-auto">
+  <section id="solution" className="py-24 px-6 border-y border-white/[0.05] bg-[#08090F]">
+    <div className="max-w-6xl mx-auto">
       <div className="text-center mb-16">
-        <h2 style={{
-          fontSize: 'clamp(24px, 3vw, 32px)',
-          fontWeight: 700,
-          marginBottom: '16px',
-          fontFamily: '"Space Grotesk", "Inter", sans-serif'
-        }}>Isolating Risk with the IL Voucher</h2>
-        <p style={{
-          color: 'rgba(161, 161, 170, 1)',
-          maxWidth: '42rem',
-          margin: '0 auto',
-          fontFamily: 'var(--font-sans)',
-          fontSize: 'var(--text-base)'
-        }}>Conduir's matching engine pairs risk-averse capital with protocols willing to underwrite IL for guaranteed liquidity.</p>
+        <h2 className="text-[clamp(26px,3vw,32px)] font-display font-bold mb-4">Isolating Risk with the IL Voucher</h2>
+        <p className="text-zinc-500 max-w-2xl mx-auto text-sm">
+          Conduir's matching engine pairs risk-averse capital with protocols willing to underwrite IL for guaranteed liquidity.
+        </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8 relative">
-        {/* Connecting line for desktop */}
-        <div className="hidden md:block absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-y-1/2 z-0" />
+      <div className="grid md:grid-cols-3 gap-6 relative">
+        {/* Connecting line */}
+        <div className="hidden md:block absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/[0.1] to-transparent -translate-y-1/2 z-0" />
 
         {[
           {
             step: "01",
             title: "Supply Capital",
             desc: "DAOs deposit single-sided or dual-sided liquidity into Conduir Vaults, completely shielded from Impermanent Loss.",
-            icon: <Lock className="w-6 h-6 text-[#E6007A]" />
+            icon: <Lock className="w-6 h-6" />
           },
           {
             step: "02",
             title: "Underwrite Risk",
             desc: "Protocols deposit native tokens to underwrite the IL risk of the provided liquidity, securing long-term market depth.",
-            icon: <Shield className="w-6 h-6 text-[#E6007A]" />
+            icon: <Shield className="w-6 h-6" />
           },
           {
             step: "03",
             title: "The IL Voucher",
             desc: "Conduir mints an ERC-20 IL Voucher representing the underwritten risk, creating a secondary market for IL pricing.",
-            icon: <Layers className="w-6 h-6 text-[#E6007A]" />
+            icon: <Layers className="w-6 h-6" />
           }
         ].map((item, i) => (
           <motion.div
@@ -296,21 +169,17 @@ const Solution = () => (
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: i * 0.2 }}
-            className="bg-[#13141C] border border-white/10 p-8 rounded-2xl relative z-10"
+            transition={{ delay: i * 0.15 }}
+            className="card p-8 relative z-10"
           >
-            <div style={{ fontSize: '3rem', fontFamily: '"Space Grotesk", "Inter", sans-serif', fontWeight: 700, color: 'rgba(255,255,255,0.05)', position: 'absolute', top: '24px', right: '24px' }}>{item.step}</div>
-            <div className="w-12 h-12 rounded-xl bg-[#E6007A]/10 flex items-center justify-center mb-6">
-              {item.icon}
+            <span className="absolute top-6 right-6 text-5xl font-display font-bold text-white/[0.03]">
+              {item.step}
+            </span>
+            <div className="w-14 h-14 rounded-2xl bg-[#FF0877]/10 flex items-center justify-center mb-6">
+              <span className="text-[#FF0877]">{item.icon}</span>
             </div>
-            <h3 style={{
-              fontSize: 'var(--text-xl)',
-              fontWeight: 700,
-              marginBottom: '12px',
-              fontFamily: '"Space Grotesk", "Inter", sans-serif',
-              color: '#FFFFFF'
-            }}>{item.title}</h3>
-            <p style={{ color: 'rgba(161, 161, 170, 1)', fontSize: 'var(--text-sm)', lineHeight: 1.6, fontFamily: 'var(--font-sans)' }}>{item.desc}</p>
+            <h3 className="text-lg font-display font-bold mb-3 text-white">{item.title}</h3>
+            <p className="text-zinc-500 text-sm leading-relaxed">{item.desc}</p>
           </motion.div>
         ))}
       </div>
@@ -320,7 +189,7 @@ const Solution = () => (
 
 const DualValue = () => (
   <section id="benefits" className="py-24 px-6">
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       <div className="grid lg:grid-cols-2 gap-12 items-center">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -329,37 +198,20 @@ const DualValue = () => (
           className="space-y-8"
         >
           <div>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '4px 12px',
-              borderRadius: '9999px',
-              background: 'rgba(16, 185, 129, 0.1)',
-              border: '1px solid rgba(16, 185, 129, 0.2)',
-              fontSize: 'var(--text-sm)',
-              color: 'rgba(52, 211, 153, 1)',
-              marginBottom: '16px',
-              fontFamily: 'var(--font-sans)'
-            }}>
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-data uppercase tracking-wider mb-4">
               For DAO Treasuries
-            </div>
-            <h2 style={{
-              fontSize: 'clamp(24px, 3vw, 32px)',
-              fontWeight: 700,
-              marginBottom: '16px',
-              fontFamily: '"Space Grotesk", "Inter", sans-serif'
-            }}>Protected Treasury Yield</h2>
-            <p style={{ color: 'rgba(161, 161, 170, 1)', fontSize: 'var(--text-lg)', lineHeight: 1.6, fontFamily: 'var(--font-sans)' }}>
+            </span>
+            <h2 className="text-[clamp(24px,3vw,32px)] font-display font-bold mb-4">Protected Treasury Yield</h2>
+            <p className="text-zinc-400 text-base leading-relaxed">
               Deploy idle treasury assets into productive DeFi strategies without the existential risk of Impermanent Loss. Predictable returns, zero IL.
             </p>
           </div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          <ul className="space-y-4">
             {['100% IL Protection Guarantee', 'Single-sided deposit options', 'Predictable, stable yield generation'].map((item, i) => (
-              <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'rgba(214, 211, 209, 1)', fontFamily: 'var(--font-sans)' }}>
-                <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'rgba(16, 185, 129, 1)' }} />
-                </div>
+              <li key={i} className="flex items-center gap-3 text-zinc-300 text-sm">
+                <span className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                </span>
                 {item}
               </li>
             ))}
@@ -370,40 +222,23 @@ const DualValue = () => (
           initial={{ opacity: 0, x: 20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          className="space-y-8 lg:pl-12 border-l-0 lg:border-l border-white/10"
+          className="space-y-8 lg:pl-12 border-l-0 lg:border-l border-white/[0.08]"
         >
           <div>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '4px 12px',
-              borderRadius: '9999px',
-              background: 'rgba(59, 130, 246, 0.1)',
-              border: '1px solid rgba(59, 130, 246, 0.2)',
-              fontSize: 'var(--text-sm)',
-              color: 'rgba(96, 165, 250, 1)',
-              marginBottom: '16px',
-              fontFamily: 'var(--font-sans)'
-            }}>
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-data uppercase tracking-wider mb-4">
               For DeFi Protocols
-            </div>
-            <h2 style={{
-              fontSize: 'clamp(24px, 3vw, 32px)',
-              fontWeight: 700,
-              marginBottom: '16px',
-              fontFamily: '"Space Grotesk", "Inter", sans-serif'
-            }}>Sustainable Market Depth</h2>
-            <p style={{ color: 'rgba(161, 161, 170, 1)', fontSize: 'var(--text-lg)', lineHeight: 1.6, fontFamily: 'var(--font-sans)' }}>
+            </span>
+            <h2 className="text-[clamp(24px,3vw,32px)] font-display font-bold mb-4">Sustainable Market Depth</h2>
+            <p className="text-zinc-400 text-base leading-relaxed">
               Bootstrap liquidity without hyper-inflationary token emissions. Pay for IL only when it happens, securing loyal, long-term capital.
             </p>
           </div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          <ul className="space-y-4">
             {['End mercenary capital reliance', 'Lower cost of liquidity acquisition', 'Tradeable IL risk via Vouchers'].map((item, i) => (
-              <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'rgba(214, 211, 209, 1)', fontFamily: 'var(--font-sans)' }}>
-                <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'rgba(59, 130, 246, 1)' }} />
-                </div>
+              <li key={i} className="flex items-center gap-3 text-zinc-300 text-sm">
+                <span className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-blue-400" />
+                </span>
                 {item}
               </li>
             ))}
@@ -415,61 +250,54 @@ const DualValue = () => (
 );
 
 const DashboardPreview = () => (
-  <section id="dashboard" className="py-24 px-6 bg-[#13141C] border-y border-white/5">
-    <div className="max-w-7xl mx-auto">
+  <section id="dashboard" className="py-24 px-6 bg-[#0C0C12] border-y border-white/[0.05]">
+    <div className="max-w-6xl mx-auto">
       <div className="text-center mb-16">
-        <h2 style={{
-          fontSize: 'clamp(24px, 3vw, 32px)',
-          fontWeight: 700,
-          marginBottom: '16px',
-          fontFamily: '"Space Grotesk", "Inter", sans-serif'
-        }}>Conduir App Architecture</h2>
-        <p style={{
-          color: 'rgba(161, 161, 170, 1)',
-          maxWidth: '42rem',
-          margin: '0 auto',
-          fontFamily: 'var(--font-sans)',
-          fontSize: 'var(--text-base)'
-        }}>A brief overview of the dApp interface designed for institutional users.</p>
+        <h2 className="text-[clamp(26px,3vw,32px)] font-display font-bold mb-4">Conduir App Architecture</h2>
+        <p className="text-zinc-500 max-w-2xl mx-auto text-sm">
+          A brief overview of the dApp interface designed for institutional users.
+        </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="bg-[#0A0B10] border border-white/10 rounded-2xl overflow-hidden flex flex-col">
-          <div className="p-4 border-b border-white/10 flex items-center gap-3 bg-white/[0.02]">
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="card p-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-white/[0.06] mb-6">
             <Wallet className="w-5 h-5 text-emerald-400" />
-            <span style={{ fontWeight: 600, fontFamily: 'var(--font-sans)', color: '#FFFFFF' }}>DAO Treasury Vault View</span>
+            <span className="font-semibold text-white">DAO Treasury Vault View</span>
           </div>
-          <div className="p-6 flex-1 space-y-4">
-            <div className="h-24 rounded-xl bg-white/5 border border-white/5 flex items-center px-6">
-              <div>
-                <div style={{ fontSize: 'var(--text-sm)', color: 'rgba(161, 161, 170, 1)', marginBottom: '4px', fontFamily: 'var(--font-sans)' }}>Total Protected Value</div>
-                <div style={{ fontSize: 'var(--text-2xl)', fontFamily: '"Space Grotesk", "Inter", sans-serif', fontWeight: 700 }}>$24,500,000.00</div>
-              </div>
+          <div className="space-y-6">
+            <div className="stat-cell p-5">
+              <p className="text-xs text-zinc-500 mb-2 font-data uppercase tracking-wider">Total Protected Value</p>
+              <p className="text-2xl font-display font-bold text-white">$24,500,000.00</p>
             </div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--text-sm)', color: 'rgba(161, 161, 170, 1)', fontFamily: 'var(--font-sans)', marginBottom: '12px' }}><ChevronRight className="w-4 h-4 text-[#E6007A]" /> Portfolio overview & IL-protected yield metrics</li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--text-sm)', color: 'rgba(161, 161, 170, 1)', fontFamily: 'var(--font-sans)', marginBottom: '12px' }}><ChevronRight className="w-4 h-4 text-[#E6007A]" /> Single-asset deposit flows</li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--text-sm)', color: 'rgba(161, 161, 170, 1)', fontFamily: 'var(--font-sans)' }}><ChevronRight className="w-4 h-4 text-[#E6007A]" /> Historical performance reports</li>
+            <ul className="space-y-3">
+              {['Portfolio overview & IL-protected yield metrics', 'Single-asset deposit flows', 'Historical performance reports'].map((item, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm text-zinc-500">
+                  <ChevronRight className="w-4 h-4 text-[#FF0877] flex-shrink-0" />
+                  {item}
+                </li>
+              ))}
             </ul>
           </div>
         </div>
 
-        <div className="bg-[#0A0B10] border border-white/10 rounded-2xl overflow-hidden flex flex-col">
-          <div className="p-4 border-b border-white/10 flex items-center gap-3 bg-white/[0.02]">
+        <div className="card p-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-white/[0.06] mb-6">
             <BarChart3 className="w-5 h-5 text-blue-400" />
-            <span style={{ fontWeight: 600, fontFamily: 'var(--font-sans)', color: '#FFFFFF' }}>Protocol Listing View</span>
+            <span className="font-semibold text-white">Protocol Listing View</span>
           </div>
-          <div className="p-6 flex-1 space-y-4">
-            <div className="h-24 rounded-xl bg-white/5 border border-white/5 flex items-center px-6">
-              <div>
-                <div style={{ fontSize: 'var(--text-sm)', color: 'rgba(161, 161, 170, 1)', marginBottom: '4px', fontFamily: 'var(--font-sans)' }}>Active IL Liability</div>
-                <div style={{ fontSize: 'var(--text-2xl)', fontFamily: '"Space Grotesk", "Inter", sans-serif', fontWeight: 700, color: 'rgba(96, 165, 250, 1)' }}>$1,240,500.00</div>
-              </div>
+          <div className="space-y-6">
+            <div className="stat-cell p-5">
+              <p className="text-xs text-zinc-500 mb-2 font-data uppercase tracking-wider">Active IL Liability</p>
+              <p className="text-2xl font-display font-bold text-blue-400">$1,240,500.00</p>
             </div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--text-sm)', color: 'rgba(161, 161, 170, 1)', fontFamily: 'var(--font-sans)', marginBottom: '12px' }}><ChevronRight className="w-4 h-4 text-[#E6007A]" /> Liquidity underwriting interface</li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--text-sm)', color: 'rgba(161, 161, 170, 1)', fontFamily: 'var(--font-sans)', marginBottom: '12px' }}><ChevronRight className="w-4 h-4 text-[#E6007A]" /> IL Voucher management & secondary market</li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--text-sm)', color: 'rgba(161, 161, 170, 1)', fontFamily: 'var(--font-sans)' }}><ChevronRight className="w-4 h-4 text-[#E6007A]" /> Real-time IL liability tracking</li>
+            <ul className="space-y-3">
+              {['Liquidity underwriting interface', 'IL Voucher management & secondary market', 'Real-time IL liability tracking'].map((item, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm text-zinc-500">
+                  <ChevronRight className="w-4 h-4 text-[#FF0877] flex-shrink-0" />
+                  {item}
+                </li>
+              ))}
             </ul>
           </div>
         </div>
@@ -492,7 +320,7 @@ const flows: Record<FlowType, { title: string; description: string; color: strin
   deposit: {
     title: 'LP Deposit & Vault Matching',
     description: 'DAO Treasuries deposit assets and get automatically matched to the best vaults with IL protection.',
-    color: '#E6007A',
+    color: '#FF0877',
     steps: [
       {
         title: 'Deposit Assets',
@@ -502,7 +330,7 @@ const flows: Record<FlowType, { title: string; description: string; color: strin
       },
       {
         title: 'Automatic Matching',
-        description: 'Conduir\'s matching engine routes your deposit to the highest-APY vault with available capacity.',
+        description: "Conduir's matching engine routes your deposit to the highest-APY vault with available capacity.",
         icon: <TrendingUp className="w-6 h-6" />,
         details: ['Algorithmic APY/capacity optimization', 'Real-time vault availability check', 'Instant routing confirmation']
       },
@@ -593,64 +421,30 @@ const FlowWalkthrough = () => {
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
 
   return (
-    <section className="py-24 px-6 bg-[#0A0B10]">
-      <div className="max-w-7xl mx-auto">
+    <section className="py-24 px-6 bg-[#050508]">
+      <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
-          <h2 style={{
-            fontSize: 'clamp(24px, 3vw, 32px)',
-            fontWeight: 700,
-            marginBottom: '16px',
-            fontFamily: '"Space Grotesk", "Inter", sans-serif'
-          }}>Interactive Protocol Flows</h2>
-          <p style={{
-            color: 'rgba(161, 161, 170, 1)',
-            maxWidth: '42rem',
-            margin: '0 auto',
-            fontFamily: 'var(--font-sans)',
-            fontSize: 'var(--text-base)'
-          }}>Step through each protocol flow to understand how Conduir separates IL risk from liquidity provision.</p>
+          <h2 className="text-[clamp(26px,3vw,32px)] font-display font-bold mb-4">Interactive Protocol Flows</h2>
+          <p className="text-zinc-500 max-w-2xl mx-auto text-sm">
+            Step through each protocol flow to understand how Conduir separates IL risk from liquidity provision.
+          </p>
         </div>
 
         {/* Flow Selector */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px', marginBottom: '48px' }}>
-          {(
-            [
-              { key: 'deposit' as FlowType, label: 'LP Deposit', icon: <Wallet className="w-5 h-5" /> },
-              { key: 'voucher' as FlowType, label: 'IL Voucher', icon: <Layers className="w-5 h-5" /> },
-              { key: 'fees' as FlowType, label: 'Fee Collection', icon: <Coins className="w-5 h-5" /> }
-            ]
-          ).map((flowBtn) => (
+        <div className="flex flex-wrap justify-center gap-4 mb-16">
+          {[
+            { key: 'deposit' as FlowType, label: 'LP Deposit', icon: <Wallet className="w-5 h-5" /> },
+            { key: 'voucher' as FlowType, label: 'IL Voucher', icon: <Layers className="w-5 h-5" /> },
+            { key: 'fees' as FlowType, label: 'Fee Collection', icon: <Coins className="w-5 h-5" /> }
+          ].map((flowBtn) => (
             <button
               key={flowBtn.key}
               onClick={() => { setActiveFlow(flowBtn.key); setCurrentStep(0); }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '12px 24px',
-                borderRadius: '12px',
-                fontWeight: 500,
-                transition: 'all 0.2s',
-                backgroundColor: activeFlow === flowBtn.key ? flow.color : '#13141C',
-                color: activeFlow === flowBtn.key ? '#fff' : 'rgba(161, 161, 170, 1)',
-                border: activeFlow === flowBtn.key ? 'none' : '1px solid rgba(255,255,255,0.1)',
-                boxShadow: activeFlow === flowBtn.key ? '0 10px 25px rgba(0,0,0,0.3)' : 'none',
-                transform: activeFlow === flowBtn.key ? 'scale(1.05)' : 'scale(1)',
-                fontFamily: 'var(--font-sans)',
-                cursor: 'pointer'
-              }}
-              onMouseEnter={(e) => {
-                if (activeFlow !== flowBtn.key) {
-                  e.currentTarget.style.color = '#fff';
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeFlow !== flowBtn.key) {
-                  e.currentTarget.style.color = 'rgba(161, 161, 170, 1)';
-                  e.currentTarget.style.background = '#13141C';
-                }
-              }}
+              className={`flex items-center gap-3 px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 ${
+                activeFlow === flowBtn.key
+                  ? 'bg-[#FF0877] text-white shadow-[0_8px_32px_rgba(255,8,119,0.3)] scale-105'
+                  : 'bg-[#0C0C12] text-zinc-500 border border-white/[0.08] hover:text-white hover:border-white/[0.15]'
+              }`}
             >
               {flowBtn.icon}
               {flowBtn.label}
@@ -659,72 +453,35 @@ const FlowWalkthrough = () => {
         </div>
 
         {/* Flow Display */}
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Steps Navigation */}
           <div className="lg:col-span-1">
-            <div className="bg-[#13141C] border border-white/10 rounded-2xl p-6">
-              <h3 style={{
-                fontSize: 'var(--text-lg)',
-                fontWeight: 700,
-                marginBottom: '24px',
-                fontFamily: '"Space Grotesk", "Inter", sans-serif',
-                color: '#FFFFFF'
-              }}>Flow Steps</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="card p-6">
+              <h3 className="text-lg font-display font-bold mb-6 text-white">Flow Steps</h3>
+              <div className="flex flex-col gap-2">
                 {flow.steps.map((step, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentStep(index)}
-                    style={{
-                      width: '100%',
-                      textAlign: 'left',
-                      padding: '16px',
-                      borderRadius: '12px',
-                      transition: 'all 0.2s',
-                      border: currentStep === index ? '2px solid' : '1px solid rgba(255,255,255,0.05)',
-                      borderColor: currentStep === index ? flow.color : undefined,
-                      backgroundColor: currentStep === index ? `${flow.color}20` : 'transparent',
-                      cursor: 'pointer',
-                      fontFamily: 'var(--font-sans)'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (currentStep !== index) {
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (currentStep !== index) {
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
-                      }
-                    }}
+                    className={`w-full text-left p-4 rounded-xl transition-all duration-200 border ${
+                      currentStep === index
+                        ? 'bg-[#FF0877]/20 border-[#FF0877]'
+                        : 'bg-transparent border-white/[0.05] hover:border-white/[0.15]'
+                    }`}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 'var(--text-sm)',
-                        fontWeight: 700,
-                        color: currentStep === index ? '#fff' : 'rgba(107, 114, 128, 1)',
-                        backgroundColor: currentStep === index ? flow.color : 'rgba(255,255,255,0.05)',
-                        fontFamily: 'var(--font-sans)'
-                      }}
-                      >
+                    <div className="flex items-center gap-3">
+                      <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
+                        currentStep === index ? 'bg-[#FF0877] text-white' : 'bg-white/[0.05] text-zinc-600'
+                      }`}>
                         {index + 1}
-                      </div>
-                      <span style={{
-                        fontSize: 'var(--text-sm)',
-                        fontWeight: 500,
-                        color: currentStep === index ? '#fff' : 'rgba(161, 161, 170, 1)',
-                        fontFamily: 'var(--font-sans)'
-                      }}>
+                      </span>
+                      <span className={`text-sm font-medium ${
+                        currentStep === index ? 'text-white' : 'text-zinc-500'
+                      }`}>
                         {step.title}
                       </span>
                       {index < currentStep && (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 ml-auto" />
                       )}
                     </div>
                   </button>
@@ -742,69 +499,34 @@ const FlowWalkthrough = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
-                className="bg-[#13141C] border border-white/10 rounded-2xl p-8 h-full"
+                className="card p-8 h-full"
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '24px', marginBottom: '32px' }}>
-                  <div
-                    style={{
-                      width: '64px',
-                      height: '64px',
-                      borderRadius: '16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      backgroundColor: `${flow.color}33`
-                    }}
-                  >
-                    <div style={{ color: flow.color }}>
-                      {flow.steps[currentStep].icon}
-                    </div>
+                <div className="flex items-start gap-6 mb-8">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${flow.color}20` }}>
+                    <span style={{ color: flow.color }}>{flow.steps[currentStep].icon}</span>
                   </div>
                   <div>
-                    <div style={{
-                      fontSize: 'var(--text-sm)',
-                      fontWeight: 500,
-                      marginBottom: '8px',
-                      color: flow.color,
-                      fontFamily: 'var(--font-sans)'
-                    }}>
+                    <span className="text-xs font-medium mb-2 block" style={{ color: flow.color }}>
                       Step {currentStep + 1} of {flow.steps.length}
-                    </div>
-                    <h3 style={{
-                      fontSize: 'var(--text-2xl)',
-                      fontWeight: 700,
-                      marginBottom: '12px',
-                      fontFamily: '"Space Grotesk", "Inter", sans-serif',
-                      color: '#FFFFFF'
-                    }}>{flow.steps[currentStep].title}</h3>
-                    <p style={{
-                      color: 'rgba(161, 161, 170, 1)',
-                      lineHeight: 1.6,
-                      fontFamily: 'var(--font-sans)'
-                    }}>{flow.steps[currentStep].description}</p>
+                    </span>
+                    <h3 className="text-2xl font-display font-bold mb-3 text-white">
+                      {flow.steps[currentStep].title}
+                    </h3>
+                    <p className="text-zinc-500 leading-relaxed">
+                      {flow.steps[currentStep].description}
+                    </p>
                   </div>
                 </div>
 
                 {flow.steps[currentStep].details && (
-                  <div style={{ backgroundColor: '#0A0B10', borderRadius: '12px', padding: '24px', marginBottom: '32px' }}>
-                    <h4 style={{
-                      fontSize: 'var(--text-sm)',
-                      fontWeight: 600,
-                      color: 'rgba(161, 161, 170, 1)',
-                      marginBottom: '16px',
-                      fontFamily: 'var(--font-sans)'
-                    }}>Key Details</h4>
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div className="stat-cell p-6 mb-8">
+                    <h4 className="text-sm font-semibold text-zinc-500 mb-4 font-data uppercase tracking-wider">
+                      Key Details
+                    </h4>
+                    <ul className="space-y-3">
                       {flow.steps[currentStep].details?.map((detail, i) => (
-                        <li key={i} style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '12px',
-                          color: 'rgba(214, 211, 209, 1)',
-                          fontFamily: 'var(--font-sans)'
-                        }}>
-                          <div style={{ width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0, backgroundColor: flow.color }} />
+                        <li key={i} className="flex items-center gap-3 text-zinc-400 text-sm">
+                          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: flow.color }} />
                           {detail}
                         </li>
                       ))}
@@ -813,14 +535,15 @@ const FlowWalkthrough = () => {
                 )}
 
                 {/* Progress Bar */}
-                <div style={{ marginBottom: '24px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', color: 'rgba(107, 114, 128, 1)', marginBottom: '8px', fontFamily: 'var(--font-sans)' }}>
+                <div className="mb-8">
+                  <div className="flex justify-between text-xs text-zinc-600 mb-2 font-data">
                     <span>Progress</span>
                     <span>{Math.round((currentStep + 1) / flow.steps.length * 100)}%</span>
                   </div>
-                  <div style={{ height: '8px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '9999px', overflow: 'hidden' }}>
+                  <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden">
                     <motion.div
-                      style={{ height: '100%', borderRadius: '9999px', backgroundColor: flow.color }}
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: flow.color }}
                       initial={{ width: 0 }}
                       animate={{ width: `${(currentStep + 1) / flow.steps.length * 100}%` }}
                       transition={{ duration: 0.3 }}
@@ -829,36 +552,15 @@ const FlowWalkthrough = () => {
                 </div>
 
                 {/* Navigation */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div className="flex items-center justify-between">
                   <button
                     onClick={prevStep}
                     disabled={currentStep === 0}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '8px 16px',
-                      borderRadius: '8px',
-                      fontSize: 'var(--text-sm)',
-                      fontWeight: 500,
-                      transition: 'all 0.2s',
-                      opacity: currentStep === 0 ? 0.5 : 1,
-                      cursor: currentStep === 0 ? 'not-allowed' : 'pointer',
-                      color: 'rgba(161, 161, 170, 1)',
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      fontFamily: 'var(--font-sans)'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (currentStep !== 0) {
-                        e.currentTarget.style.color = '#fff';
-                        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = 'rgba(161, 161, 170, 1)';
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      currentStep === 0
+                        ? 'text-zinc-600 cursor-not-allowed'
+                        : 'text-zinc-500 hover:text-white hover:bg-white/[0.05]'
+                    }`}
                   >
                     <ChevronLeft className="w-4 h-4" />
                     Previous
@@ -867,45 +569,20 @@ const FlowWalkthrough = () => {
                   {currentStep === flow.steps.length - 1 ? (
                     <Link
                       to="/app"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '12px 24px',
-                        borderRadius: '12px',
-                        fontWeight: 500,
-                        color: '#fff',
-                        backgroundColor: flow.color,
-                        textDecoration: 'none',
-                        transition: 'transform 0.2s',
-                        fontFamily: 'var(--font-sans)'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                      className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-white transition-transform hover:scale-105"
+                      style={{ backgroundColor: flow.color }}
                     >
-                      Try in dApp <ArrowRight className="w-4 h-4" />
+                      Try in dApp
+                      <ArrowRight className="w-4 h-4" />
                     </Link>
                   ) : (
                     <button
                       onClick={nextStep}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '12px 24px',
-                        borderRadius: '12px',
-                        fontWeight: 500,
-                        color: '#fff',
-                        backgroundColor: flow.color,
-                        border: 'none',
-                        transition: 'transform 0.2s',
-                        fontFamily: 'var(--font-sans)',
-                        cursor: 'pointer'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                      className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-white transition-transform hover:scale-105"
+                      style={{ backgroundColor: flow.color }}
                     >
-                      Next Step <ArrowRight className="w-4 h-4" />
+                      Next Step
+                      <ArrowRight className="w-4 h-4" />
                     </button>
                   )}
                 </div>

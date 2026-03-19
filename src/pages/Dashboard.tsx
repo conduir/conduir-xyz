@@ -52,8 +52,8 @@ function PoolCard({ onDeposit }: { onDeposit: () => void }) {
     <div className="card card-pink p-6">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <p className="font-data text-[10px] uppercase tracking-[0.18em] text-zinc-500 mb-1">Liquidity Pool</p>
-          <h2 className="text-2xl font-display font-bold tracking-tight">Token A / Token B</h2>
+          <p className="font-data text-[10px] uppercase tracking-[0.18em] text-zinc-600 mb-1">Liquidity Pool</p>
+          <h2 className="text-2xl font-display font-bold tracking-tight text-white">Token A / Token B</h2>
           <p className="font-data text-xs text-zinc-600 mt-0.5">ConstantAMM · Pool ID 0</p>
         </div>
         <div className="flex items-center gap-2">
@@ -63,7 +63,7 @@ function PoolCard({ onDeposit }: { onDeposit: () => void }) {
           </span>
           <button
             onClick={() => refetch()}
-            className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
+            className="w-8 h-8 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center text-zinc-600 hover:text-white transition-colors"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -73,9 +73,9 @@ function PoolCard({ onDeposit }: { onDeposit: () => void }) {
       <div className="grid grid-cols-2 gap-3 mb-5">
         {stats.map(({ label, value, sub, loading: l }) => (
           <div key={label} className="stat-cell p-4">
-            <p className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-500 mb-2">{label}</p>
+            <p className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600 mb-2">{label}</p>
             {l
-              ? <div className="h-6 w-24 rounded bg-white/5 animate-pulse" />
+              ? <div className="h-6 w-24 rounded bg-white/[0.05] animate-pulse" />
               : <p className="font-data text-xl text-white">{value}</p>
             }
             {sub && !l && <p className="font-data text-[10px] text-zinc-600 mt-1">{sub}</p>}
@@ -83,7 +83,7 @@ function PoolCard({ onDeposit }: { onDeposit: () => void }) {
         ))}
       </div>
 
-      <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-500/5 border border-emerald-500/15 mb-5">
+      <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-500/[0.05] border border-emerald-500/[0.15] mb-5">
         <Shield className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
         <p className="font-data text-xs text-emerald-400/80">100% IL protection — covered by protocol collateral</p>
       </div>
@@ -106,12 +106,12 @@ function PositionsCard({ positions, isLoading, onWithdraw, onRefresh }: {
     <div className="card card-blue p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="font-data text-[10px] uppercase tracking-[0.18em] text-zinc-500 mb-1">Your Positions</p>
-          <h2 className="text-xl font-display font-bold tracking-tight">Active Deposits</h2>
+          <p className="font-data text-[10px] uppercase tracking-[0.18em] text-zinc-600 mb-1">Your Positions</p>
+          <h2 className="text-xl font-display font-bold tracking-tight text-white">Active Deposits</h2>
         </div>
         <button
           onClick={onRefresh}
-          className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
+          className="w-8 h-8 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center text-zinc-600 hover:text-white transition-colors"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
         </button>
@@ -124,10 +124,10 @@ function PositionsCard({ positions, isLoading, onWithdraw, onRefresh }: {
       ) : positions.length === 0 ? (
         <div className="text-center py-12">
           <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-3">
-            <Layers className="w-5 h-5 text-zinc-600" />
+            <Layers className="w-5 h-5 text-zinc-700" />
           </div>
-          <p className="font-data text-sm text-zinc-500">No positions yet</p>
-          <p className="font-data text-xs text-zinc-600 mt-1">Deposit into the pool to get started</p>
+          <p className="font-data text-sm text-zinc-600">No positions yet</p>
+          <p className="font-data text-xs text-zinc-700 mt-1">Deposit into the pool to get started</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -141,14 +141,14 @@ function PositionsCard({ positions, isLoading, onWithdraw, onRefresh }: {
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#E6007A]/10 border border-[#E6007A]/20 flex items-center justify-center flex-shrink-0">
-                    <span className="font-data text-[10px] text-[#E6007A]">#{p.positionId.toString()}</span>
+                  <div className="w-8 h-8 rounded-lg bg-[#FF0877]/10 border border-[#FF0877]/20 flex items-center justify-center flex-shrink-0">
+                    <span className="font-data text-[10px] text-[#FF0877]">#{p.positionId.toString()}</span>
                   </div>
                   <div>
                     <StatusPill status={p.status} />
                     <div className="flex items-center gap-1.5 mt-1">
-                      <Lock className="w-3 h-3 text-zinc-600" />
-                      <p className="font-data text-[11px] text-zinc-500">
+                      <Lock className="w-3 h-3 text-zinc-700" />
+                      <p className="font-data text-[11px] text-zinc-600">
                         {p.isLockExpired
                           ? <span className="text-emerald-400">Unlocked</span>
                           : `Locked until ${p.lockExpiry.toLocaleDateString()}`
@@ -163,8 +163,8 @@ function PositionsCard({ positions, isLoading, onWithdraw, onRefresh }: {
                     disabled={!p.isLockExpired}
                     className={`font-data text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-colors ${
                       p.isLockExpired
-                        ? 'border-white/15 text-white hover:bg-white/10'
-                        : 'border-white/5 text-zinc-600 cursor-not-allowed'
+                        ? 'border-white/[0.15] text-white hover:bg-white/[0.1]'
+                        : 'border-white/[0.05] text-zinc-700 cursor-not-allowed'
                     }`}
                   >
                     Withdraw
@@ -178,7 +178,7 @@ function PositionsCard({ positions, isLoading, onWithdraw, onRefresh }: {
                   { label: 'LP Tokens', value: formatAmount(p.lpAmount) },
                 ].map(({ label, value }) => (
                   <div key={label}>
-                    <p className="font-data text-[10px] uppercase tracking-[0.1em] text-zinc-600 mb-0.5">{label}</p>
+                    <p className="font-data text-[10px] uppercase tracking-[0.1em] text-zinc-700 mb-0.5">{label}</p>
                     <p className="font-data text-sm text-white">{value}</p>
                   </div>
                 ))}
@@ -217,8 +217,8 @@ function ILChecker({ positions }: { positions: Position[] }) {
     <div className="card card-purple p-6">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <p className="font-data text-[10px] uppercase tracking-[0.18em] text-zinc-500 mb-1">Risk Analysis</p>
-          <h2 className="text-xl font-display font-bold tracking-tight">IL Checker</h2>
+          <p className="font-data text-[10px] uppercase tracking-[0.18em] text-zinc-600 mb-1">Risk Analysis</p>
+          <h2 className="text-xl font-display font-bold tracking-tight text-white">IL Checker</h2>
         </div>
         <TrendingDown className="w-5 h-5 text-purple-400 opacity-50" />
       </div>
@@ -229,7 +229,7 @@ function ILChecker({ positions }: { positions: Position[] }) {
             key={t}
             onClick={() => setTab(t)}
             className={`flex-1 py-2 rounded-lg font-data text-[11px] uppercase tracking-widest transition-colors ${
-              tab === t ? 'bg-[#0D0E16] text-white' : 'text-zinc-500 hover:text-zinc-300'
+              tab === t ? 'bg-[#0C0C12] text-white' : 'text-zinc-600 hover:text-zinc-400'
             }`}
           >
             {t === 'positions' ? 'My Positions' : 'Calculator'}
@@ -248,8 +248,8 @@ function ILChecker({ positions }: { positions: Position[] }) {
           {tab === 'positions' && (
             activePositions.length === 0 ? (
               <div className="text-center py-10">
-                <TrendingDown className="w-8 h-8 mx-auto mb-2 text-zinc-700" />
-                <p className="font-data text-sm text-zinc-500">No active positions to analyse</p>
+                <TrendingDown className="w-8 h-8 mx-auto mb-2 text-zinc-800" />
+                <p className="font-data text-sm text-zinc-700">No active positions to analyse</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -261,7 +261,7 @@ function ILChecker({ positions }: { positions: Position[] }) {
                   return (
                     <div key={p.positionId.toString()} className="stat-cell p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-data text-sm text-zinc-300">Position #{p.positionId.toString()}</span>
+                        <span className="font-data text-sm text-zinc-400">Position #{p.positionId.toString()}</span>
                         <span className={`font-data text-sm font-medium ${isLoss ? 'text-red-400' : 'text-emerald-400'}`}>
                           {il < 0 ? '' : '+'}{ilPct}%
                         </span>
@@ -272,11 +272,11 @@ function ILChecker({ positions }: { positions: Position[] }) {
                           style={{ width: `${Math.min(Math.abs(il) * 500, 100)}%` }}
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-2 font-data text-[11px] text-zinc-500 mb-2">
-                        <span>Entry: <span className="text-zinc-300">${formatUnits(p.entryPrice, 18).slice(0, 8)}</span></span>
-                        <span>Current: <span className="text-zinc-300">${currentPriceA}</span></span>
+                      <div className="grid grid-cols-2 gap-2 font-data text-[11px] text-zinc-600 mb-2">
+                        <span>Entry: <span className="text-zinc-400">${formatUnits(p.entryPrice, 18).slice(0, 8)}</span></span>
+                        <span>Current: <span className="text-zinc-400">${currentPriceA}</span></span>
                       </div>
-                      <div className={`font-data text-[11px] px-3 py-2 rounded-lg ${isLoss ? 'bg-red-500/8 text-red-400' : 'bg-emerald-500/8 text-emerald-400'}`}>
+                      <div className={`font-data text-[11px] px-3 py-2 rounded-lg ${isLoss ? 'bg-red-500/[0.08] text-red-400' : 'bg-emerald-500/[0.08] text-emerald-400'}`}>
                         {isLoss ? `~${ilAmt.toFixed(4)} Token A IL — covered by protocol` : 'No significant IL at current price'}
                       </div>
                     </div>
@@ -290,23 +290,23 @@ function ILChecker({ positions }: { positions: Position[] }) {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-500 mb-2">Entry Price ($)</label>
+                  <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600 mb-2">Entry Price ($)</label>
                   <input type="number" min="0" placeholder="10.00" value={entryPrice} onChange={e => setEntryPrice(e.target.value)} className="input-field" />
                 </div>
                 <div>
-                  <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-500 mb-2">Current Price ($)</label>
+                  <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600 mb-2">Current Price ($)</label>
                   <input type="number" min="0" placeholder="15.00" value={currentPrice} onChange={e => setCurrentPrice(e.target.value)} className="input-field" />
                 </div>
               </div>
               <div>
-                <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-500 mb-2">Deposit Amount (optional)</label>
+                <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600 mb-2">Deposit Amount (optional)</label>
                 <input type="number" min="0" placeholder="1000" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} className="input-field" />
               </div>
 
               {calcResult && (
                 <div className="stat-cell p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-500">IL Percentage</span>
+                    <span className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600">IL Percentage</span>
                     <span className={`font-data text-xl font-medium ${calcResult.isLoss ? 'text-red-400' : 'text-emerald-400'}`}>
                       {calcResult.ilPct}%
                     </span>
@@ -319,7 +319,7 @@ function ILChecker({ positions }: { positions: Position[] }) {
                   </div>
                   {calcResult.ilAmount !== null && (
                     <div className="flex items-center justify-between pt-2 border-t border-white/[0.05]">
-                      <span className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-500">Estimated Loss</span>
+                      <span className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600">Estimated Loss</span>
                       <span className="font-data text-sm text-red-400">{calcResult.ilAmount.toFixed(4)}</span>
                     </div>
                   )}
@@ -345,13 +345,13 @@ export default function Dashboard() {
   const { positions, isLoading: positionsLoading, refetch: refetchPositions } = useUserPositions(address);
 
   return (
-    <div className="min-h-screen bg-[#07080D] grid-bg pt-20">
+    <div className="min-h-screen bg-[#050508] grid-bg pt-20">
       <div className="max-w-4xl mx-auto px-4 py-10 space-y-5">
 
         <motion.div {...fadeUp} className="flex items-end justify-between">
           <div>
-            <p className="font-data text-[10px] uppercase tracking-[0.2em] text-zinc-600 mb-1">Polkadot Hub TestNet</p>
-            <h1 className="text-3xl font-display font-bold tracking-tight">Conduir</h1>
+            <p className="font-data text-[10px] uppercase tracking-[0.2em] text-zinc-700 mb-1">Polkadot Hub TestNet</p>
+            <h1 className="text-3xl font-display font-bold tracking-tight text-white">Conduir</h1>
           </div>
           {!isConnected && <WalletButton />}
         </motion.div>
@@ -359,11 +359,11 @@ export default function Dashboard() {
         {!isConnected ? (
           <motion.div {...fadeUp} transition={{ duration: 0.4 }} className="min-h-[55vh] flex items-center justify-center">
             <div className="text-center max-w-sm">
-              <div className="w-20 h-20 rounded-3xl bg-[#E6007A]/10 border border-[#E6007A]/20 flex items-center justify-center mx-auto mb-6">
-                <Shield className="w-9 h-9 text-[#E6007A]" />
+              <div className="w-20 h-20 rounded-3xl bg-[#FF0877]/10 border border-[#FF0877]/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(255,8,119,0.2)]">
+                <Shield className="w-9 h-9 text-[#FF0877]" />
               </div>
-              <h2 className="text-2xl font-display font-bold mb-2">Connect Wallet</h2>
-              <p className="font-data text-sm text-zinc-500 mb-8 leading-relaxed">
+              <h2 className="text-2xl font-display font-bold mb-2 text-white">Connect Wallet</h2>
+              <p className="font-data text-sm text-zinc-600 mb-8 leading-relaxed">
                 Connect to Polkadot Hub TestNet to deposit liquidity, track positions, and check IL.
               </p>
               <WalletButton />
@@ -399,7 +399,7 @@ export default function Dashboard() {
               key={c.label}
               href={`${BLOCKSCOUT}/address/${c.addr}`}
               target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 font-data text-[10px] uppercase tracking-widest text-zinc-600 hover:text-zinc-400 transition-colors"
+              className="inline-flex items-center gap-1.5 font-data text-[10px] uppercase tracking-widest text-zinc-700 hover:text-zinc-500 transition-colors"
             >
               <ExternalLink className="w-3 h-3" />
               {c.label}

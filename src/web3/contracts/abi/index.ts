@@ -92,6 +92,35 @@ export const CONSTANT_AMM_ABI = [
     inputs: [],
     outputs: [{ name: 'price', type: 'uint256' }],
   },
+  {
+    type: 'function', name: 'swap', stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'tokenIn', type: 'address' },
+      { name: 'amountIn', type: 'uint256' },
+      { name: 'amountOutMin', type: 'uint256' },
+      { name: 'recipient', type: 'address' },
+    ],
+    outputs: [{ name: 'amountOut', type: 'uint256' }],
+  },
+  {
+    type: 'function', name: 'quote', stateMutability: 'view',
+    inputs: [
+      { name: 'tokenIn', type: 'address' },
+      { name: 'amountIn', type: 'uint256' },
+    ],
+    outputs: [{ name: 'amountOut', type: 'uint256' }],
+  },
+  // Swap event for tracking
+  {
+    type: 'event', name: 'Swap',
+    inputs: [
+      { name: 'tokenIn', type: 'address', indexed: true },
+      { name: 'tokenOut', type: 'address', indexed: true },
+      { name: 'amountIn', type: 'uint256', indexed: false },
+      { name: 'amountOut', type: 'uint256', indexed: false },
+      { name: 'recipient', type: 'address', indexed: true },
+    ],
+  },
   // ERC-20 LP token functions
   {
     type: 'function', name: 'balanceOf', stateMutability: 'view',

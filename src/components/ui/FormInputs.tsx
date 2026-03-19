@@ -22,12 +22,12 @@ export function Button({
   disabled = false,
   ...props
 }: ButtonProps) {
-  const baseStyle = "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10]";
+  const baseStyle = "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#FF0877]/50 focus:ring-offset-2 focus:ring-offset-[#050508]";
 
   const variants = {
-    primary: "bg-[#E6007A] hover:bg-[#C20066] text-white",
-    secondary: "bg-white/5 hover:bg-white/10 text-white border border-white/10",
-    ghost: "text-slate-400 hover:text-white hover:bg-white/5",
+    primary: "bg-gradient-to-br from-[#FF0877] to-[#E6006A] hover:shadow-[0_8px_32px_rgba(255,8,119,0.35)] text-white",
+    secondary: "bg-white/[0.05] hover:bg-white/[0.1] text-white border border-white/[0.1]",
+    ghost: "text-zinc-500 hover:text-white hover:bg-white/[0.05]",
     danger: "bg-[#EF4444] hover:bg-[#DC2626] text-white",
     success: "bg-[#22C55E] hover:bg-[#16A34A] text-white",
     info: "bg-[#3B82F6] hover:bg-[#2563EB] text-white",
@@ -63,7 +63,7 @@ export function IconButton({
   className = '',
   ...props
 }: IconButtonProps) {
-  const baseStyle = "inline-flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10] rounded-lg";
+  const baseStyle = "inline-flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#FF0877]/50 focus:ring-offset-2 focus:ring-offset-[#050508] rounded-lg";
 
   const sizes = {
     sm: "p-1.5",
@@ -72,8 +72,8 @@ export function IconButton({
   };
 
   const variants = {
-    ghost: "text-slate-400 hover:text-white hover:bg-white/5",
-    secondary: "text-slate-400 bg-white/5 hover:bg-white/10",
+    ghost: "text-zinc-500 hover:text-white hover:bg-white/[0.05]",
+    secondary: "text-zinc-500 bg-white/[0.05] hover:bg-white/[0.1]",
   };
 
   return (
@@ -112,7 +112,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={inputId} className="block text-sm font-medium text-slate-300 mb-2">
+          <label htmlFor={inputId} className="block text-sm font-medium text-zinc-400 mb-2">
             {label}
           </label>
         )}
@@ -123,11 +123,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             aria-invalid={!!error}
             aria-describedby={error ? errorId : undefined}
             className={`
-              w-full bg-[#0A0B10] border rounded-xl text-white placeholder:text-slate-500
-              focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10] transition-all
+              w-full bg-[#08080C] border rounded-xl text-white placeholder:text-zinc-600
+              focus:outline-none focus:ring-2 focus:ring-[#FF0877]/50 focus:ring-offset-2 focus:ring-offset-[#050508] transition-all
               disabled:opacity-50 disabled:cursor-not-allowed
               ${sizeClasses[size]}
-              ${error ? 'border-red-500/50' : 'border-white/10'}
+              ${error ? 'border-red-500/[0.5]' : 'border-white/[0.1]'}
               ${showMaxButton ? 'pr-20' : ''}
               ${className}
             `}
@@ -137,7 +137,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={onMaxClick}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-[#E6007A] bg-[#E6007A]/10 hover:bg-[#E6007A]/20 px-2 py-1 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-[#FF0877] bg-[#FF0877]/10 hover:bg-[#FF0877]/20 px-2 py-1 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF0877]/50"
             >
               MAX
             </button>
@@ -167,7 +167,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={selectId} className="block text-sm font-medium text-slate-300 mb-2">
+          <label htmlFor={selectId} className="block text-sm font-medium text-zinc-400 mb-2">
             {label}
           </label>
         )}
@@ -177,10 +177,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           aria-invalid={!!error}
           aria-describedby={error ? errorId : undefined}
           className={`
-            w-full bg-[#0A0B10] border rounded-xl px-4 py-3 text-white
-            focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10] transition-all
+            w-full bg-[#08080C] border rounded-xl px-4 py-3 text-white
+            focus:outline-none focus:ring-2 focus:ring-[#FF0877]/50 focus:ring-offset-2 focus:ring-offset-[#050508] transition-all
             disabled:opacity-50 disabled:cursor-not-allowed
-            ${error ? 'border-red-500/50' : 'border-white/10'}
+            ${error ? 'border-red-500/[0.5]' : 'border-white/[0.1]'}
             ${className}
           `}
           {...props}
@@ -217,7 +217,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={inputId} className="block text-sm font-medium text-slate-300 mb-2">
+          <label htmlFor={inputId} className="block text-sm font-medium text-zinc-400 mb-2">
             {label}
           </label>
         )}
@@ -228,23 +228,23 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             aria-invalid={!!error}
             aria-describedby={error ? errorId : undefined}
             className={`
-              w-full bg-[#0A0B10] border rounded-xl px-4 py-3 pr-24 text-white
-              placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50 focus:ring-offset-2 focus:ring-offset-[#0A0B10]
+              w-full bg-[#08080C] border rounded-xl px-4 py-3 pr-24 text-white
+              placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#FF0877]/50 focus:ring-offset-2 focus:ring-offset-[#050508]
               transition-all disabled:opacity-50 disabled:cursor-not-allowed
-              ${error ? 'border-red-500/50' : 'border-white/10'}
+              ${error ? 'border-red-500/[0.5]' : 'border-white/[0.1]'}
               ${className}
             `}
             {...props}
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
             {symbol && (
-              <span className="text-slate-400 text-sm">{symbol}</span>
+              <span className="text-zinc-500 text-sm">{symbol}</span>
             )}
             {onMaxClick && (
               <button
                 type="button"
                 onClick={onMaxClick}
-                className="text-xs font-bold text-[#E6007A] bg-[#E6007A]/10 hover:bg-[#E6007A]/20 px-2 py-1 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-[#E6007A]/50"
+                className="text-xs font-bold text-[#FF0877] bg-[#FF0877]/10 hover:bg-[#FF0877]/20 px-2 py-1 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF0877]/50"
               >
                 MAX
               </button>
@@ -256,8 +256,8 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             <p id={errorId} className="text-red-400 text-sm">{error}</p>
           )}
           {!error && balance !== undefined && (
-            <p className="text-slate-500 text-sm ml-auto">
-              Balance: <span className="text-slate-300">{balance}</span>
+            <p className="text-zinc-600 text-sm ml-auto">
+              Balance: <span className="text-zinc-400">{balance}</span>
             </p>
           )}
         </div>
