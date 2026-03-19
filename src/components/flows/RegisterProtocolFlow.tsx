@@ -1,15 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ArrowRight, CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
-import { useDepositFlow } from '../../hooks/useDepositFlow';
+import { X, ArrowRight, CheckCircle2, ExternalLink, Loader2, Info } from 'lucide-react';
+import { useRegisterProtocolFlow } from '../../hooks/useRegisterProtocolFlow';
 import type { Address } from 'viem';
 
 const BLOCKSCOUT = 'https://blockscout-testnet.polkadot.io';
-
-// Known registered protocol on testnet (deployer address)
-const KNOWN_PROTOCOLS = [
-  { label: 'Conduir Testnet Protocol', address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' as Address },
-] as const;
 
 interface Props {
   isOpen: boolean;
@@ -18,14 +13,13 @@ interface Props {
   onSuccess?: () => void;
 }
 
-const STEPS = ['amount', 'approve-a', 'approve-b', 'confirm', 'success'] as const;
+const STEPS = ['collateral', 'approve-usdc', 'confirm', 'success'] as const;
 
 function StepCircles({ current }: { current: string }) {
   const steps = [
-    { key: 'amount',    label: 'Amounts' },
-    { key: 'approve-a', label: 'Approve A' },
-    { key: 'approve-b', label: 'Approve B' },
-    { key: 'confirm',   label: 'Confirm' },
+    { key: 'collateral',   label: 'Collateral' },
+    { key: 'approve-usdc', label: 'Approve' },
+    { key: 'confirm',      label: 'Confirm' },
   ];
   const idx = STEPS.indexOf(current as typeof STEPS[number]);
   return (
@@ -50,10 +44,12 @@ function StepCircles({ current }: { current: string }) {
   );
 }
 
-export function DepositFlow({ isOpen, onClose, userAddress, onSuccess }: Props) {
-  const { state, balanceA, balanceB, actions } = useDepositFlow(userAddress, KNOWN_PROTOCOLS[0].address);
+export function RegisterProtocolFlow({ isOpen, onClose, userAddress, onSuccess }: Props) {
+  const { state, totalApproval, actions } = useRegisterProtocolFlow(userAddress);
   const handleClose = () => { actions.reset(); onClose(); };
   if (!isOpen) return null;
+
+  const stepIdx = STEPS.indexOf(state.step as typeof STEPS[number]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
@@ -68,9 +64,9 @@ export function DepositFlow({ isOpen, onClose, userAddress, onSuccess }: Props) 
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/[0.06]">
           <div>
             <p className="font-data text-[10px] uppercase tracking-[0.18em] text-zinc-600">
-              {state.step !== 'success' ? `Step ${Math.max(1, STEPS.indexOf(state.step as typeof STEPS[number]))} of 4` : 'Complete'}
+              {state.step !== 'success' ? `Step ${Math.max(1, stepIdx)} of 3` : 'Complete'}
             </p>
-            <h2 className="font-display font-bold text-lg mt-0.5 text-white">Deposit Liquidity</h2>
+            <h2 className="font-display font-bold text-lg mt-0.5 text-white">Register Protocol</h2>
           </div>
           <button onClick={handleClose} className="w-8 h-8 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center text-zinc-500 hover:text-white transition-colors">
             <X className="w-4 h-4" />
@@ -88,60 +84,40 @@ export function DepositFlow({ isOpen, onClose, userAddress, onSuccess }: Props) 
               exit={{ opacity: 0, x: -12 }}
               transition={{ duration: 0.15 }}
             >
-              {state.step === 'amount' && (
+              {state.step === 'collateral' && (
                 <div className="space-y-4">
-                  <p className="font-data text-xs text-zinc-500">Deposit Token A and Token B with IL protection.</p>
-
-                  {[
-                    { label: 'Token A Amount', val: state.amountA, set: actions.setAmountA, bal: balanceA },
-                    { label: 'Token B Amount', val: state.amountB, set: actions.setAmountB, bal: balanceB },
-                  ].map(({ label, val, set, bal }) => (
-                    <div key={label}>
-                      <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600 mb-2">{label}</label>
-                      <div className="relative">
-                        <input
-                          type="number" min="0" placeholder="0.00"
-                          value={val} onChange={e => set(e.target.value)}
-                          className="input-field pr-16"
-                        />
-                        <button
-                          onClick={() => set(bal)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 font-data text-[10px] uppercase tracking-widest text-[#FF0877] bg-[#FF0877]/10 hover:bg-[#FF0877]/20 px-2 py-1 rounded transition-colors"
-                        >Max</button>
-                      </div>
-                      <p className="font-data text-[10px] text-zinc-700 mt-1">Balance: {parseFloat(bal).toFixed(4)}</p>
-                    </div>
-                  ))}
-
                   <div>
-                    <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600 mb-2">
-                      Lock Duration — <span className="text-white">{state.lockDays} days</span>
-                    </label>
+                    <label className="block font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600 mb-2">Initial Collateral (USDC)</label>
                     <input
-                      type="range" min="7" max="365" step="1"
-                      value={state.lockDays} onChange={e => actions.setLockDays(Number(e.target.value))}
-                      className="w-full"
+                      type="number" min="0" placeholder="0.00"
+                      value={state.collateralAmount}
+                      onChange={e => actions.setCollateralAmount(e.target.value)}
+                      className="input-field"
                     />
-                    <div className="flex justify-between font-data text-[10px] text-zinc-700 mt-1">
-                      <span>7 days</span><span>365 days</span>
-                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-blue-500/[0.06] border border-blue-500/[0.15]">
+                    <Info className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+                    <p className="font-data text-[11px] text-blue-400/80">
+                      100 USDC listing fee + your collateral will be approved in one transaction.
+                    </p>
                   </div>
 
                   {state.error && <p className="font-data text-xs text-red-400 bg-red-500/[0.08] rounded-lg px-3 py-2 border border-red-500/[0.15]">{state.error}</p>}
 
-                  <button onClick={actions.proceedFromAmount} className="btn-primary">
+                  <button onClick={actions.proceedFromCollateral} className="btn-primary">
                     Continue <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               )}
 
-              {(state.step === 'approve-a' || state.step === 'approve-b') && (
+              {state.step === 'approve-usdc' && (
                 <div className="space-y-4">
                   <div className="stat-cell p-4 space-y-2">
                     {[
-                      { label: 'Token A', value: parseFloat(state.amountA).toFixed(4) },
-                      { label: 'Token B', value: parseFloat(state.amountB).toFixed(4) },
-                      { label: 'Lock',    value: `${state.lockDays} days` },
+                      { label: 'Collateral',    value: `${parseFloat(state.collateralAmount).toFixed(2)} USDC` },
+                      { label: 'Listing Fee',   value: '100.00 USDC' },
+                      { label: 'Total Approval', value: `${parseFloat(totalApproval).toFixed(2)} USDC` },
                     ].map(({ label, value }) => (
                       <div key={label} className="flex justify-between">
                         <span className="font-data text-xs text-zinc-600">{label}</span>
@@ -151,24 +127,18 @@ export function DepositFlow({ isOpen, onClose, userAddress, onSuccess }: Props) 
                   </div>
 
                   <div className="bg-amber-500/[0.08] border border-amber-500/[0.2] rounded-xl p-4">
-                    <p className="font-data text-xs text-amber-400 font-medium mb-1 uppercase tracking-widest">
-                      Approve {state.step === 'approve-a' ? 'Token A' : 'Token B'}
-                    </p>
+                    <p className="font-data text-xs text-amber-400 font-medium mb-1 uppercase tracking-widest">Approve USDC</p>
                     <p className="font-data text-[11px] text-amber-400/70">
-                      Allow the Router to spend your {state.step === 'approve-a' ? 'Token A' : 'Token B'}.
+                      Allow the Router to spend {parseFloat(totalApproval).toFixed(2)} USDC (fee + collateral).
                     </p>
                   </div>
 
                   {state.error && <p className="font-data text-xs text-red-400 bg-red-500/[0.08] rounded-lg px-3 py-2 border border-red-500/[0.15]">{state.error}</p>}
 
-                  <button
-                    onClick={state.step === 'approve-a' ? actions.approveA : actions.approveB}
-                    disabled={state.isSubmitting}
-                    className="btn-primary"
-                  >
+                  <button onClick={actions.approveUsdc} disabled={state.isSubmitting} className="btn-primary">
                     {state.isSubmitting
                       ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
-                      : <>Approve {state.step === 'approve-a' ? 'Token A' : 'Token B'}</>
+                      : 'Approve USDC'
                     }
                   </button>
                 </div>
@@ -178,11 +148,10 @@ export function DepositFlow({ isOpen, onClose, userAddress, onSuccess }: Props) 
                 <div className="space-y-4">
                   <div className="stat-cell p-4 space-y-3">
                     {[
-                      { label: 'Token A',      value: `${parseFloat(state.amountA).toFixed(4)}` },
-                      { label: 'Token B',      value: `${parseFloat(state.amountB).toFixed(4)}` },
-                      { label: 'Lock Duration', value: `${state.lockDays} days` },
-                      { label: 'Protocol',     value: KNOWN_PROTOCOLS[0].label },
-                      { label: 'IL Protection', value: '100% Covered', accent: true },
+                      { label: 'Collateral',     value: `${parseFloat(state.collateralAmount).toFixed(2)} USDC` },
+                      { label: 'Listing Fee',    value: '100.00 USDC' },
+                      { label: 'Pool ID',        value: '0' },
+                      { label: 'IL Protection',  value: 'Enabled', accent: true },
                     ].map(({ label, value, accent }) => (
                       <div key={label} className={`flex justify-between ${accent ? 'pt-3 border-t border-white/[0.05]' : ''}`}>
                         <span className="font-data text-xs text-zinc-600">{label}</span>
@@ -193,10 +162,10 @@ export function DepositFlow({ isOpen, onClose, userAddress, onSuccess }: Props) 
 
                   {state.error && <p className="font-data text-xs text-red-400 bg-red-500/[0.08] rounded-lg px-3 py-2 border border-red-500/[0.15]">{state.error}</p>}
 
-                  <button onClick={actions.confirmDeposit} disabled={state.isSubmitting} className="btn-primary">
+                  <button onClick={actions.confirmRegister} disabled={state.isSubmitting} className="btn-primary">
                     {state.isSubmitting
-                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Depositing...</>
-                      : 'Confirm Deposit'
+                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Registering...</>
+                      : 'Confirm Registration'
                     }
                   </button>
                 </div>
@@ -211,8 +180,8 @@ export function DepositFlow({ isOpen, onClose, userAddress, onSuccess }: Props) 
                     </div>
                   </div>
                   <div>
-                    <h3 className="font-display font-bold text-xl mb-1 text-white">Deposit Successful</h3>
-                    <p className="font-data text-xs text-zinc-600">Your liquidity is now IL-protected.</p>
+                    <h3 className="font-display font-bold text-xl mb-1 text-white">Protocol Registered</h3>
+                    <p className="font-data text-xs text-zinc-600">Your protocol is now live. LPs can deposit into your pool.</p>
                   </div>
                   {state.txHash && (
                     <a

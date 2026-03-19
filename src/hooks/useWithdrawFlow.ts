@@ -56,10 +56,19 @@ export function useWithdrawFlow(position: Position | null, userAddress?: Address
     set({ isSubmitting: true, error: null });
     try {
       const hash = await withdraw(BigInt(position.positionIndex), position.lpAmount);
+
+      // After successful tx, we'd need to decode from receipt
+      // For now, use the position data as a fallback estimate
+      // TODO: Parse receipt to get actual return values (amountA, amountB, ilPayout)
       set({
         isSubmitting: false,
         step: 'success',
-        result: { amountA: 0n, amountB: 0n, ilPayout: 0n, txHash: hash },
+        result: {
+          amountA: position.amountA,  // From position data as fallback
+          amountB: position.amountB,
+          ilPayout: 0n,  // Will be updated when we parse receipt
+          txHash: hash,
+        },
       });
     } catch (e: any) {
       set({ isSubmitting: false, error: e?.shortMessage || e?.message || 'Withdraw failed' });

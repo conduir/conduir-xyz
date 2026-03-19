@@ -19,17 +19,12 @@ export interface DepositState {
 }
 
 const POOL_ID = 0n;
-// Use a registered protocol address — for demo we use a placeholder; in production
-// the user would pick from registered protocols. We use the zero address as a stand-in
-// which the contract will reject — the UI should show the real registered protocol.
-// For the testnet demo, we use the deployer/admin address as the protocol.
-const PROTOCOL_ADDRESS = '0x0000000000000000000000000000000000000001' as Address;
 
 const TOKEN_A = getContractAddress('tokenA');
 const TOKEN_B = getContractAddress('tokenB');
 const ROUTER  = getContractAddress('router');
 
-export function useDepositFlow(userAddress?: Address) {
+export function useDepositFlow(userAddress?: Address, protocolAddress?: Address) {
   const [state, setState] = useState<DepositState>({
     step: 'amount',
     amountA: '',
@@ -140,7 +135,7 @@ export function useDepositFlow(userAddress?: Address) {
       const amtA = parseUnits(state.amountA, decimalsA);
       const amtB = parseUnits(state.amountB, decimalsB);
       const lockDuration = BigInt(state.lockDays) * 86400n;
-      const hash = await deposit(POOL_ID, PROTOCOL_ADDRESS, amtA, amtB, lockDuration);
+      const hash = await deposit(POOL_ID, protocolAddress ?? '0x0000000000000000000000000000000000000001', amtA, amtB, lockDuration);
       set({ isSubmitting: false, step: 'success', txHash: hash });
     } catch (e: any) {
       set({ isSubmitting: false, error: e?.shortMessage || e?.message || 'Deposit failed' });

@@ -1,13 +1,16 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowRight, Layers, BookOpen } from 'lucide-react';
+import { ArrowRight, BookOpen } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { WalletButton } from './web3/WalletButton';
+import logo from '../public/logo.png';
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isConnected } = useAccount();
+
+  const isAppRoute = location.pathname.startsWith('/app');
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
@@ -23,9 +26,7 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#050508]/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF0877] to-[#E6006A] flex items-center justify-center shadow-[0_0_20px_rgba(255,8,119,0.3)]">
-            <Layers className="w-5 h-5 text-white" />
-          </div>
+          <img src={logo} alt="Conduir" className="w-10 h-10" />
           <span className="font-display font-bold text-xl tracking-tight text-white">Conduir</span>
         </Link>
 
@@ -54,7 +55,7 @@ export default function Navbar() {
             <BookOpen className="w-4 h-4" />
             Docs
           </Link>
-          {isConnected || location.pathname === '/app' ? (
+          {isAppRoute ? (
             <WalletButton />
           ) : (
             <Link

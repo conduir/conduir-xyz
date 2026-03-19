@@ -1,18 +1,28 @@
 import React, { useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
-import { Shield, Layers, TrendingDown, RefreshCw, ExternalLink, Lock, ArrowUpRight } from 'lucide-react';
+import { Shield, Layers, TrendingDown, RefreshCw, ExternalLink, Lock, ArrowUpRight, CheckCircle2, Ticket } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTokenPrice } from '../web3/hooks/useOracle';
 import { useUserPositions, calcIL, formatAmount, type Position } from '../web3/hooks/useILVault';
 import { usePoolInfo } from '../web3/hooks/useRouter';
+import { useVoucherBalance } from '../web3/hooks/useVoucher';
 import { getContractAddress } from '../web3/contracts/addresses';
 import { DepositFlow } from '../components/flows/DepositFlow';
 import { WithdrawFlow } from '../components/flows/WithdrawFlow';
+import { RegisterProtocolFlow } from '../components/flows/RegisterProtocolFlow';
 import { WalletButton } from '../components/web3/WalletButton';
 
 const TOKEN_A = getContractAddress('tokenA');
 const TOKEN_B = getContractAddress('tokenB');
+
+const COLLATERAL_MANAGER_ABI = [
+  {
+    type: 'function', name: 'getCollateralHealth', stateMutability: 'view',
+    inputs: [{ name: 'protocol', type: 'address' }],
+    outputs: [{ name: 'healthRatio', type: 'uint256' }],
+  },
+] as const;
 const BLOCKSCOUT = 'https://blockscout-testnet.polkadot.io';
 
 const fadeUp = {
@@ -37,13 +47,13 @@ function StatusPill({ status }: { status: Position['status'] }) {
 
 function PoolCard({ onDeposit }: { onDeposit: () => void }) {
   const { reserveA, reserveB, isLoading: resLoad, refetch } = usePoolInfo();
-  const { formattedPrice: priceA, updatedAt: updA, isLoading: pALoad } = useTokenPrice(TOKEN_A);
-  const { formattedPrice: priceB, updatedAt: updB, isLoading: pBLoad } = useTokenPrice(TOKEN_B);
+  const { formattedPrice: priceA, updatedAt: updA, isLoading: pALoad, isDemoMode: demoA } = useTokenPrice(TOKEN_A);
+  const { formattedPrice: priceB, updatedAt: updB, isLoading: pBLoad, isDemoMode: demoB } = useTokenPrice(TOKEN_B);
   const loading = resLoad || pALoad || pBLoad;
 
   const stats = [
-    { label: 'Token A Price', value: `$${priceA}`, sub: updA?.toLocaleTimeString(), loading: pALoad },
-    { label: 'Token B Price', value: `$${priceB}`, sub: updB?.toLocaleTimeString(), loading: pBLoad },
+    { label: 'Token A Price', value: `$${priceA}`, sub: updA?.toLocaleTimeString(), loading: pALoad, isDemo: demoA },
+    { label: 'Token B Price', value: `$${priceB}`, sub: updB?.toLocaleTimeString(), loading: pBLoad, isDemo: demoB },
     { label: 'Reserve A',     value: formatAmount(reserveA), sub: 'tokens', loading: resLoad },
     { label: 'Reserve B',     value: formatAmount(reserveB), sub: 'tokens', loading: resLoad },
   ];
@@ -71,8 +81,17 @@ function PoolCard({ onDeposit }: { onDeposit: () => void }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-5">
-        {stats.map(({ label, value, sub, loading: l }) => (
-          <div key={label} className="stat-cell p-4">
+        {stats.map(({ label, value, sub, loading: l, isDemo }) => (
+          <div key={label} className="stat-cell p-4 relative">
+            {/* Demo Mode badge with tooltip */}
+            {isDemo && (
+              <span
+                title="Oracle unavailable — showing demo price for preview"
+                className="cursor-help absolute top-3 right-3 font-data text-[8px] uppercase tracking-widest text-blue-400 border border-blue-400/30 px-1 rounded"
+              >
+                Demo
+              </span>
+            )}
             <p className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600 mb-2">{label}</p>
             {l
               ? <div className="h-6 w-24 rounded bg-white/[0.05] animate-pulse" />
@@ -339,10 +358,22 @@ function ILChecker({ positions }: { positions: Position[] }) {
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount();
+  const [tab, setTab] = useState<'lp' | 'protocol'>('lp');
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [registerOpen, setRegisterOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const { positions, isLoading: positionsLoading, refetch: refetchPositions } = useUserPositions(address);
+  const { balance: voucherBalance, refetch: refetchVouchers } = useVoucherBalance(address);
+
+  const { data: collateralHealth } = useReadContract({
+    address: getContractAddress('collateralManager'),
+    abi: COLLATERAL_MANAGER_ABI,
+    functionName: 'getCollateralHealth',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
+  });
+  const isRegistered = (collateralHealth ?? 0n) > 0n;
 
   return (
     <div className="min-h-screen bg-[#050508] grid-bg pt-20">
@@ -371,21 +402,106 @@ export default function Dashboard() {
           </motion.div>
         ) : (
           <>
-            {[
-              <PoolCard key="pool" onDeposit={() => setDepositOpen(true)} />,
-              <PositionsCard
-                key="positions"
-                positions={positions}
-                isLoading={positionsLoading}
-                onWithdraw={p => { setSelectedPosition(p); setWithdrawOpen(true); }}
-                onRefresh={refetchPositions}
-              />,
-              <ILChecker key="il" positions={positions} />,
-            ].map((el, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: i * 0.09 }}>
-                {el}
-              </motion.div>
-            ))}
+            {/* Tab switcher */}
+            <motion.div {...fadeUp} transition={{ duration: 0.3 }}>
+              <div className="flex gap-1 p-1 rounded-xl bg-black/30 border border-white/[0.05] w-fit">
+                {(['lp', 'protocol'] as const).map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setTab(t)}
+                    className={`px-5 py-2 rounded-lg font-data text-[11px] uppercase tracking-widest transition-colors ${
+                      tab === t ? 'bg-[#0C0C12] text-white' : 'text-zinc-600 hover:text-zinc-400'
+                    }`}
+                  >
+                    {t === 'lp' ? 'LP' : 'Protocol'}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+
+            <AnimatePresence mode="wait">
+              {tab === 'lp' ? (
+                <motion.div
+                  key="lp"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-5"
+                >
+                  {[
+                    <PoolCard key="pool" onDeposit={() => setDepositOpen(true)} />,
+                    <PositionsCard
+                      key="positions"
+                      positions={positions}
+                      isLoading={positionsLoading}
+                      onWithdraw={p => { setSelectedPosition(p); setWithdrawOpen(true); }}
+                      onRefresh={refetchPositions}
+                    />,
+                    <ILChecker key="il" positions={positions} />,
+                  ].map((el, i) => (
+                    <motion.div key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: i * 0.09 }}>
+                      {el}
+                    </motion.div>
+                  ))}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="protocol"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-5"
+                >
+                  {/* Voucher balance card */}
+                  <div className="card card-pink p-6">
+                    <div className="flex items-start justify-between mb-6">
+                      <div>
+                        <p className="font-data text-[10px] uppercase tracking-[0.18em] text-zinc-600 mb-1">Protocol Dashboard</p>
+                        <h2 className="text-2xl font-display font-bold tracking-tight text-white">IL Vouchers</h2>
+                        <p className="font-data text-xs text-zinc-600 mt-0.5">Minted to your address when LPs deposit</p>
+                      </div>
+                      <div className="w-10 h-10 rounded-xl bg-[#FF0877]/10 border border-[#FF0877]/20 flex items-center justify-center">
+                        <Ticket className="w-5 h-5 text-[#FF0877]" />
+                      </div>
+                    </div>
+
+                    <div className="stat-cell p-5 mb-5">
+                      <p className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600 mb-2">Voucher Balance</p>
+                      <p className="font-data text-4xl text-white">{voucherBalance.toString()}</p>
+                      <p className="font-data text-xs text-zinc-700 mt-1">ILV tokens held</p>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#FF0877]/[0.05] border border-[#FF0877]/[0.15] mb-5">
+                      <Shield className="w-3.5 h-3.5 text-[#FF0877] flex-shrink-0" />
+                      <p className="font-data text-xs text-[#FF0877]/80">Each voucher represents one unit of IL obligation for your pool</p>
+                    </div>
+
+                    {isRegistered ? (
+                      <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/[0.2]">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                        <div>
+                          <p className="font-data text-xs text-emerald-400 font-medium">Registered ✓</p>
+                          <p className="font-data text-[10px] text-emerald-400/60 mt-0.5">Your protocol is active and accepting LPs</p>
+                        </div>
+                        <button
+                          onClick={() => refetchVouchers()}
+                          className="ml-auto w-7 h-7 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center text-zinc-600 hover:text-white transition-colors"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setRegisterOpen(true)} className="btn-primary">
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                        Register Protocol
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </>
         )}
 
@@ -410,6 +526,7 @@ export default function Dashboard() {
 
       <DepositFlow isOpen={depositOpen} onClose={() => setDepositOpen(false)} userAddress={address} onSuccess={refetchPositions} />
       <WithdrawFlow isOpen={withdrawOpen} onClose={() => setWithdrawOpen(false)} position={selectedPosition} userAddress={address} onSuccess={refetchPositions} />
+      <RegisterProtocolFlow isOpen={registerOpen} onClose={() => setRegisterOpen(false)} userAddress={address} onSuccess={refetchVouchers} />
     </div>
   );
 }

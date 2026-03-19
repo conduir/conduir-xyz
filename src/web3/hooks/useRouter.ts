@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useReadContract, useWriteContract } from 'wagmi';
+import { useReadContract, useWriteContract, useSimulateContract } from 'wagmi';
 import { getContractAddress } from '../contracts/addresses';
 import { ROUTER_ABI, CONSTANT_AMM_ABI } from '../contracts/abi';
 import type { Address } from 'viem';
@@ -37,7 +37,20 @@ export function useRouter() {
     });
   }, [routerAddress, writeContractAsync]);
 
-  return { deposit, withdraw, isPending };
+  const registerProtocol = useCallback(async (
+    poolId: bigint,
+    initialCollateral: bigint,
+  ): Promise<`0x${string}`> => {
+    // @ts-expect-error wagmi writeContractAsync types require chain/account at call site
+    return writeContractAsync({
+      address: routerAddress,
+      abi: ROUTER_ABI,
+      functionName: 'registerProtocol',
+      args: [poolId, initialCollateral],
+    });
+  }, [routerAddress, writeContractAsync]);
+
+  return { deposit, withdraw, registerProtocol, isPending };
 }
 
 export function usePoolInfo() {
@@ -104,4 +117,22 @@ export function useLPBalance(owner?: Address) {
     refetch,
     refetchAllowance,
   };
+}
+
+/**
+ * Simulation hook for estimating withdrawal results.
+ * Note: Full receipt parsing to get actual return values requires
+ * additional work with `waitForTransactionReceipt`.
+ * This is tracked as a TODO for future enhancement.
+ */
+export function useSimulateWithdraw(positionIndex: bigint | null, lpAmount: bigint | null) {
+  const routerAddress = getContractAddress('router');
+
+  return useSimulateContract({
+    address: routerAddress,
+    abi: ROUTER_ABI,
+    functionName: 'withdraw',
+    args: positionIndex !== null && lpAmount !== null ? [positionIndex, lpAmount] : undefined,
+    query: { enabled: positionIndex !== null && lpAmount !== null },
+  });
 }

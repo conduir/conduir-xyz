@@ -3,6 +3,14 @@ export const POSITION_STATUS = { ACTIVE: 0, SETTLED: 1, EXPIRED: 2 } as const;
 
 export const ROUTER_ABI = [
   {
+    type: 'function', name: 'registerProtocol', stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'poolId', type: 'uint256' },
+      { name: 'initialCollateral', type: 'uint256' },
+    ],
+    outputs: [],
+  },
+  {
     type: 'function', name: 'deposit', stateMutability: 'nonpayable',
     inputs: [
       { name: 'poolId', type: 'uint256' },

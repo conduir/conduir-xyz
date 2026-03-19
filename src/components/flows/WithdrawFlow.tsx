@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle2, ExternalLink, Loader2, AlertTriangle } from 'lucide-react';
 import { formatUnits } from 'viem';
 import { useWithdrawFlow } from '../../hooks/useWithdrawFlow';
+import { useSettleIL } from '../../web3/hooks/useSettleIL';
 import type { Position } from '../../web3/hooks/useILVault';
 import type { Address } from 'viem';
 
@@ -18,6 +19,8 @@ interface Props {
 
 export function WithdrawFlow({ isOpen, onClose, position, userAddress, onSuccess }: Props) {
   const { state, actions } = useWithdrawFlow(position, userAddress);
+  const { estimate, ilPercentage, isDemoMode } = useSettleIL(position);
+
   const handleClose = () => { actions.reset(); onClose(); };
   if (!isOpen || !position) return null;
 
@@ -75,6 +78,37 @@ export function WithdrawFlow({ isOpen, onClose, position, userAddress, onSuccess
                       </span>
                     </div>
                   </div>
+
+                  {/* Settlement Estimate */}
+                  {estimate && state.step === 'confirm' && (
+                    <div className="stat-cell p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600">Estimated Return</span>
+                        {isDemoMode && (
+                          <span
+                            title="Oracle unavailable — showing demo estimate"
+                            className="cursor-help text-[8px] text-blue-400 border border-blue-400/30 px-1 rounded"
+                          >
+                            Demo
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <span className="text-zinc-500">Token A: <span className="text-white">{estimate.formatted.amountA}</span></span>
+                        <span className="text-zinc-500">Token B: <span className="text-white">{estimate.formatted.amountB}</span></span>
+                      </div>
+                      <div className="flex items-center justify-between pt-2 border-t border-white/[0.05]">
+                        <span className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600">IL</span>
+                        <span className={`font-data text-sm ${ilPercentage < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                          {ilPercentage < 0 ? '' : '+'}{ilPercentage.toFixed(2)}%
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600">IL Payout</span>
+                        <span className="text-emerald-400">{estimate.formatted.ilPayout}</span>
+                      </div>
+                    </div>
+                  )}
 
                   {!lockExpired && (
                     <div className="flex items-start gap-2.5 bg-amber-500/8 border border-amber-500/20 rounded-xl p-3">
