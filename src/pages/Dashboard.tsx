@@ -379,12 +379,9 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#050508] grid-bg pt-20">
       <div className="max-w-4xl mx-auto px-4 py-10 space-y-5">
 
-        <motion.div {...fadeUp} className="flex items-end justify-between">
-          <div>
-            <p className="font-data text-[10px] uppercase tracking-[0.2em] text-zinc-700 mb-1">Polkadot Hub TestNet</p>
-            <h1 className="text-3xl font-display font-bold tracking-tight text-white">Conduir</h1>
-          </div>
-          {!isConnected && <WalletButton />}
+        <motion.div {...fadeUp}>
+          <p className="font-data text-[10px] uppercase tracking-[0.2em] text-zinc-700 mb-1">Polkadot Hub TestNet</p>
+          <h1 className="text-3xl font-display font-bold tracking-tight text-white">Conduir</h1>
         </motion.div>
 
         {!isConnected ? (

@@ -89,7 +89,7 @@ export function WalletButton({
         whileTap={{ scale: 0.98 }}
         onClick={handleConnect}
         disabled={isConnecting}
-        className={`bg-white text-black px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-slate-200 transition-colors flex items-center gap-2 disabled:opacity-50 ${className}`}
+        className={`bg-gradient-to-br from-[#FF0877] to-[#E6006A] text-white px-5 py-2.5 rounded-xl font-display font-bold text-xs uppercase tracking-[0.08em] shadow-[0_0_20px_rgba(255,8,119,0.25)] hover:shadow-[0_0_30px_rgba(255,8,119,0.4)] hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-50 ${className}`}
       >
         <Wallet className="w-4 h-4" />
         {isConnecting ? 'Connecting...' : 'Connect Wallet'}
@@ -112,7 +112,7 @@ export function WalletButton({
           <AlertCircle className="w-4 h-4 text-amber-500" />
         )}
         {showBalance && (
-          <span className="text-slate-400">{formattedBalance} PAS</span>
+          <span className="hidden sm:inline text-slate-400">{formattedBalance} PAS</span>
         )}
         <span className="text-white">{address && formatAddress(address)}</span>
         <ChevronDown
