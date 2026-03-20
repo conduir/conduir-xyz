@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useMemo } from 'react';
 import { formatUnits } from 'viem';
 import { getContractAddress } from '../contracts/addresses';
 import { useTokenPrice } from './useOracle';
@@ -31,7 +31,7 @@ export function useSettleIL(position: Position | null) {
     : 0;
 
   // Estimate settlement amounts (client-side estimation)
-  const estimate = useCallback((): SettlementEstimate | null => {
+  const estimate = useMemo((): SettlementEstimate | null => {
     if (!position || !isFetched) return null;
 
     // If price is mocked (demo mode), show that in the estimate
@@ -48,8 +48,8 @@ export function useSettleIL(position: Position | null) {
     const ilPayout = BigInt(Math.floor(ilAmount * 1e18));
 
     // Check if lock period has expired
-    const now = Math.floor(Date.now() / 1000);
-    const canSettle = Number(position.lockStart) + Number(position.lockDuration) <= now;
+    const lockExpiry = new Date((Number(position.lockStart) + Number(position.lockDuration)) * 1000);
+    const canSettle = lockExpiry <= new Date();
 
     return {
       amountA,

@@ -2,6 +2,7 @@
 import { useReadContract } from 'wagmi';
 import { getContractAddress } from '../contracts/addresses';
 import { ERC20_ABI } from '../contracts/abi';
+import { polkadotTestnet } from '../config/chains';
 import type { Address } from 'viem';
 
 export function useVoucherBalance(owner?: Address) {
@@ -11,6 +12,7 @@ export function useVoucherBalance(owner?: Address) {
     abi: ERC20_ABI,
     functionName: 'balanceOf',
     args: owner ? [owner] : undefined,
+    chainId: polkadotTestnet.id,
     query: { enabled: !!owner },
   });
   return { balance: balance ?? 0n, count: Number(balance ?? 0n), refetch };

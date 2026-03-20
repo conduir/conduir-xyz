@@ -2,6 +2,7 @@ import { useReadContract } from 'wagmi';
 import { formatUnits, parseUnits } from 'viem';
 import { getContractAddress } from '../contracts/addresses';
 import { ORACLE_ADAPTER_ABI } from '../contracts/abi';
+import { polkadotTestnet } from '../config/chains';
 import type { Address } from 'viem';
 
 export interface TokenPriceResult {
@@ -21,6 +22,7 @@ export function useTokenPrice(tokenAddress: Address): TokenPriceResult {
     abi: ORACLE_ADAPTER_ABI,
     functionName: 'getPrice',
     args: [tokenAddress],
+    chainId: polkadotTestnet.id,
     query: {
       refetchInterval: 30_000,
       enabled: !!tokenAddress,
@@ -39,9 +41,10 @@ export function useTokenPrice(tokenAddress: Address): TokenPriceResult {
 
   const formattedPrice = (isFetched && rawPrice > 0n)
     ? parseFloat(formatUnits(rawPrice, 18)).toLocaleString(undefined, {
-        maximumFractionDigits: 4,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
       })
-    : (isDemoMode ? '1.2345' : '—');
+    : (isDemoMode ? '1.23' : '—');
 
   return { price, formattedPrice, updatedAt, isLoading, isFetched, error, isDemoMode, refetch };
 }

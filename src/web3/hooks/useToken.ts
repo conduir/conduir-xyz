@@ -8,6 +8,7 @@ import { parseUnits, formatUnits } from 'viem';
 import { CONTRACT_ABIS } from '../contracts/abi';
 import { useTransactionReceipt } from './useContract';
 import { getContractAddress } from '../contracts/addresses';
+import { polkadotTestnet } from '../config/chains';
 import type { Address } from 'viem';
 
 /**
@@ -33,6 +34,7 @@ export function useToken(tokenAddress: Address) {
     address: tokenAddress,
     abi: CONTRACT_ABIS.erc20,
     functionName: 'decimals',
+    chainId: polkadotTestnet.id,
   });
 
   /**
@@ -42,6 +44,7 @@ export function useToken(tokenAddress: Address) {
     address: tokenAddress,
     abi: CONTRACT_ABIS.erc20,
     functionName: 'symbol',
+    chainId: polkadotTestnet.id,
   });
 
   /**
@@ -51,6 +54,7 @@ export function useToken(tokenAddress: Address) {
     address: tokenAddress,
     abi: CONTRACT_ABIS.erc20,
     functionName: 'name',
+    chainId: polkadotTestnet.id,
   });
 
   /**
@@ -86,6 +90,7 @@ export function useTokenBalance(tokenAddress: Address, owner?: Address) {
     abi: CONTRACT_ABIS.erc20,
     functionName: 'balanceOf',
     args: owner ? [owner] : undefined,
+    chainId: polkadotTestnet.id,
     query: {
       enabled: !!owner,
     },
@@ -95,6 +100,7 @@ export function useTokenBalance(tokenAddress: Address, owner?: Address) {
     address: tokenAddress,
     abi: CONTRACT_ABIS.erc20,
     functionName: 'decimals',
+    chainId: polkadotTestnet.id,
   });
 
   const formattedBalance = useMemo(() => {
@@ -128,6 +134,7 @@ export function useTokenAllowance(
     abi: CONTRACT_ABIS.erc20,
     functionName: 'allowance',
     args: owner && spender ? [owner, spender] : undefined,
+    chainId: polkadotTestnet.id,
     query: {
       enabled: !!owner && !!spender,
     },
@@ -168,6 +175,7 @@ export function useTokenApproval(tokenAddress: Address) {
         abi: CONTRACT_ABIS.erc20,
         functionName: 'approve',
         args: [spender, amountToApprove],
+        chain: polkadotTestnet,
       });
     },
     [tokenAddress, writeContractAsync]
@@ -187,6 +195,7 @@ export function useTokenApproval(tokenAddress: Address) {
         abi: CONTRACT_ABIS.erc20,
         functionName: 'approve',
         args: [spender, amountToApprove],
+        chainId: polkadotTestnet.id,
       });
     },
     [tokenAddress]
@@ -215,6 +224,7 @@ export function useTokenBalances(
     abi: CONTRACT_ABIS.erc20,
     functionName: 'balanceOf',
     args: owner ? [owner] : undefined,
+    chainId: polkadotTestnet.id,
     query: {
       enabled: false, // Disabled since we can't batch in this simple implementation
     },

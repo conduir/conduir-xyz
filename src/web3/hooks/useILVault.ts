@@ -1,16 +1,17 @@
 import { useReadContract, useReadContracts } from 'wagmi';
-import { formatUnits } from 'viem';
+import { formatUnits, numberToHex, hexToNumber } from 'viem';
 import { getContractAddress } from '../contracts/addresses';
 import { IL_VAULT_ABI, POSITION_STATUS } from '../contracts/abi';
-import type { Address } from 'viem';
+import { polkadotTestnet } from '../config/chains';
+import type { Address, Hex } from 'viem';
 
 export type PositionStatus = 'ACTIVE' | 'SETTLED' | 'EXPIRED';
 
 export interface Position {
-  positionId: bigint;
+  positionId: Hex;
   positionIndex: number;
   owner: Address;
-  poolId: bigint;
+  poolId: Hex;
   protocolAddress: Address;
   amountA: bigint;
   amountB: bigint;
@@ -30,21 +31,23 @@ function parseStatus(s: number): PositionStatus {
 }
 
 // Reads a single position by ID
-export function usePosition(positionId: bigint) {
+export function usePosition(positionId: Hex) {
   const { data, isLoading, refetch } = useReadContract({
     address: getContractAddress('ilVault'),
     abi: IL_VAULT_ABI,
     functionName: 'getPosition',
     args: [positionId],
-    query: { enabled: positionId > 0n },
+    chainId: polkadotTestnet.id,
+    query: { enabled: !!positionId && positionId !== '0x0000000000000000000000000000000000000000000000000000000000000000' },
   });
 
   if (!data) return { position: null, isLoading, refetch };
 
+  const posNum = hexToNumber(positionId);
   const lockExpiry = new Date((Number(data[6]) + Number(data[7])) * 1000);
   const position: Position = {
     positionId,
-    positionIndex: Number(positionId) - 1, // positionIndex = positionId - 1 (0-based)
+    positionIndex: posNum - 1, // positionIndex = positionId - 1 (0-based)
     owner: data[0],
     poolId: data[1],
     protocolAddress: data[2],
@@ -72,7 +75,8 @@ export function useUserPositions(userAddress?: Address, maxPositions = 20) {
     address: ilVaultAddress,
     abi: IL_VAULT_ABI,
     functionName: 'getPosition' as const,
-    args: [BigInt(i + 1)] as const,
+    args: [numberToHex(BigInt(i + 1), { size: 32 })] as const,
+    chainId: polkadotTestnet.id,
   }));
 
   const { data, isLoading, refetch } = useReadContracts({
@@ -88,7 +92,7 @@ export function useUserPositions(userAddress?: Address, maxPositions = 20) {
       const d = result.result;
       if (d[0].toLowerCase() !== userAddress.toLowerCase()) return;
 
-      const positionId = BigInt(i + 1);
+      const positionId = numberToHex(BigInt(i + 1), { size: 32 });
       const lockExpiry = new Date((Number(d[6]) + Number(d[7])) * 1000);
       positions.push({
         positionId,
