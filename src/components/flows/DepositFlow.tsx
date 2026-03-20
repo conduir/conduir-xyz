@@ -8,7 +8,7 @@ const BLOCKSCOUT = 'https://blockscout-testnet.polkadot.io';
 
 // Known registered protocol on testnet (deployer address)
 const KNOWN_PROTOCOLS = [
-  { label: 'Conduir Testnet Protocol', address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' as Address },
+  { label: 'Conduir Testnet Protocol', address: '0x16003e90Ddca83c96751ce5A6cF984aB624870E9' as Address },
 ] as const;
 
 interface Props {
@@ -118,12 +118,12 @@ export function DepositFlow({ isOpen, onClose, userAddress, onSuccess }: Props) 
                       Lock Duration — <span className="text-white">{state.lockDays} days</span>
                     </label>
                     <input
-                      type="range" min="7" max="365" step="1"
+                      type="range" min="0" max="41" step="1"
                       value={state.lockDays} onChange={e => actions.setLockDays(Number(e.target.value))}
                       className="w-full"
                     />
                     <div className="flex justify-between font-data text-[10px] text-zinc-700 mt-1">
-                      <span>7 days</span><span>365 days</span>
+                      <span>0 days</span><span>41 days (max)</span>
                     </div>
                   </div>
 

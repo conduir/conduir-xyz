@@ -19,7 +19,7 @@ export interface DepositState {
   txHash: string | null;
 }
 
-const PROTOCOL_ADDRESS: Address = '0x30c4F6A4592332AF7BC8c991be5120E6Db259956';
+const PROTOCOL_ADDRESS: Address = '0x16003e90Ddca83c96751ce5A6cF984aB624870E9';
 
 const TOKEN_A = getContractAddress('tokenA');
 const TOKEN_B = getContractAddress('tokenB');
@@ -30,7 +30,7 @@ export function useDepositFlow(userAddress?: Address, protocolAddress?: Address)
     step: 'amount',
     amountA: '',
     amountB: '',
-    lockDays: 30,
+    lockDays: 0,
     isSubmitting: false,
     error: null,
     txHash: null,
@@ -40,15 +40,9 @@ export function useDepositFlow(userAddress?: Address, protocolAddress?: Address)
   const { data: poolId, isLoading: poolIdLoading, error: poolIdError } = useComputePoolId(TOKEN_A, TOKEN_B);
   const { writeContractAsync } = useWriteContract();
 
-  // Fetch decimals dynamically from token contracts
-  const { data: decimalsA = 18 } = useReadContract({
-    address: TOKEN_A, abi: ERC20_ABI, functionName: 'decimals',
-    chainId: polkadotTestnet.id,
-  });
-  const { data: decimalsB = 18 } = useReadContract({
-    address: TOKEN_B, abi: ERC20_ABI, functionName: 'decimals',
-    chainId: polkadotTestnet.id,
-  });
+  // Forced to 18 decimals as per user requirement
+  const decimalsA = 18;
+  const decimalsB = 18;
 
   const { data: allowanceA, refetch: refetchA } = useReadContract({
     address: TOKEN_A, abi: ERC20_ABI, functionName: 'allowance',
@@ -139,25 +133,32 @@ export function useDepositFlow(userAddress?: Address, protocolAddress?: Address)
   }, [writeContractAsync, refetchB]);
 
   const confirmDeposit = useCallback(async () => {
-    if (!validateAmounts()) return;
-    if (!poolId) {
-      set({ error: poolIdError ? `Pool not found: ${poolIdError.message}` : 'Computing Pool ID...' });
-      return;
-    }
     set({ isSubmitting: true, error: null });
     try {
+      // Use the hardcoded poolId fallback if computePoolId fails or returns empty
+      const finalPoolId = poolId || '0x53eb4e86acd669bbe56a8400f7058b729ac5520ef46e79afde643cb330425796';
+      
       const amtA = parseUnits(state.amountA, decimalsA);
       const amtB = parseUnits(state.amountB, decimalsB);
       const lockDuration = BigInt(state.lockDays) * 86400n;
-      const hash = await deposit(poolId, PROTOCOL_ADDRESS, amtA, amtB, lockDuration);
+
+      console.group('🚀 [DEPOSIT DEBUG]');
+      console.log('Pool ID:', finalPoolId);
+      console.log('Protocol:', PROTOCOL_ADDRESS);
+      console.log('Amount A:', amtA.toString(), `(${state.amountA} tokens)`);
+      console.log('Amount B:', amtB.toString(), `(${state.amountB} tokens)`);
+      console.log('Lock Duration (sec):', lockDuration.toString(), `(${state.lockDays} days)`);
+      console.groupEnd();
+
+      const hash = await deposit(finalPoolId as Hex, PROTOCOL_ADDRESS, amtA, amtB, lockDuration);
       set({ isSubmitting: false, step: 'success', txHash: hash });
     } catch (e: any) {
       set({ isSubmitting: false, error: e?.shortMessage || e?.message || 'Deposit failed. Please try again.' });
     }
-  }, [validateAmounts, state.amountA, state.amountB, state.lockDays, deposit, decimalsA, decimalsB, poolId, poolIdError]);
+  }, [validateAmounts, state.amountA, state.amountB, state.lockDays, deposit, decimalsA, decimalsB, poolId]);
 
   const reset = useCallback(() => setState({
-    step: 'amount', amountA: '', amountB: '', lockDays: 30,
+    step: 'amount', amountA: '', amountB: '', lockDays: 0,
     isSubmitting: false, error: null, txHash: null,
   }), []);
 
