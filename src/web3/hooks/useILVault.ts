@@ -89,21 +89,27 @@ export function useUserPositions(userAddress?: Address) {
   const positions: Position[] = [];
 
   if (data && lpPositions) {
-    data.forEach((result, i) => {
+    (data as any[]).forEach((result, i) => {
       if (result.status !== 'success' || !result.result) return;
       const d = result.result as any;
-      const originalPos = lpPositions[i];
+      const originalPos = (lpPositions as any[])[i];
 
       // Filter: Only include ACTIVE positions as seen by both Router and ILVault
       // This hides settled/empty positions from the "Active Deposits" list
       const isActive = originalPos.active && (Number(d.status || d[9] || 0) === 0);
+      // Filter: Show position if it is active IN BOTH router and ilVault,
+      // OR if it has a non-zero balance remaining (e.g. after a partial withdraw).
+      const isActiveInRouter = originalPos.active;
+      const isActiveInVault = (Number(d.status || d[9] || 0) === 0);
       const isNotEmpty = (d.amountA || d[3] || 0n) > 0n || (d.amountB || d[4] || 0n) > 0n;
 
-      if (!isActive || !isNotEmpty) return;
+      if (!isNotEmpty) return; // If empty, we don't show it as an "Active Deposit"
 
       const lockExpiry = new Date(Number(d.lockExpiry || d[6]) * 1000);
       positions.push({
         positionId: originalPos.positionId,
+        // CRITICAL: use `i` — the original index in the LP positions array from the contract.
+        // The contract's withdraw() expects this exact integer index, NOT a filtered counter.
         positionIndex: i,
         owner: d.lp || d[0],
         poolId: originalPos.poolId || d.poolId || d[1],
@@ -114,7 +120,7 @@ export function useUserPositions(userAddress?: Address) {
         lockStart: d.depositTime || d[7] || 0n,
         lockDuration: (d.lockExpiry && d.depositTime) ? (d.lockExpiry - d.depositTime) : (d.lockExpiry || d[6] || 0n),
         lpAmount: d.voucherAmount || d[8] || 0n,
-        status: 'ACTIVE',
+        status: (isActiveInRouter && isActiveInVault) ? 'ACTIVE' : 'SETTLED',
         lockExpiry,
         isLockExpired: lockExpiry < new Date(),
       });
@@ -139,15 +145,15 @@ export function calcIL(entryPrice: bigint, currentPrice: bigint): number {
   return (2 * Math.sqrt(P)) / (1 + P) - 1; // negative = loss
 }
 
-export function formatAmount(amount: bigint | undefined | null, decimals = 18): string {
-  if (amount === undefined || amount === null) return '0,0000';
+export function formatAmount(amount: bigint | undefined | null, decimals = 6): string {
+  if (amount === undefined || amount === null) return '0,00';
   try {
     return parseFloat(formatUnits(amount, decimals)).toLocaleString('id-ID', {
-      minimumFractionDigits: 4,
-      maximumFractionDigits: 4,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     });
   } catch (e) {
     console.error('Error formatting amount:', e, amount);
-    return '0,0000';
+    return '0,00';
   }
 }

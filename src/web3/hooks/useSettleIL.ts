@@ -39,14 +39,14 @@ export function useSettleIL(position: Position | null) {
     const isDemo = isDemoMode;
 
     // Calculate IL amount based on position's Token A amount
-    const ilAmount = Math.abs(ilPercentage) * Number(formatUnits(position.amountA, 18));
+    const ilAmount = Math.abs(ilPercentage) * Number(formatUnits(position.amountA, 6));
 
     // For estimation, we approximate:
     // - amountA/B returned ≈ position amounts (proportional to LP being burned)
     // - ilPayout = IL amount covered by protocol
     const amountA = position.amountA;  // Simplified - actual contract calc may differ
     const amountB = position.amountB;
-    const ilPayout = BigInt(Math.floor(ilAmount * 1e18));
+    const ilPayout = BigInt(Math.floor(ilAmount * 1e6));
 
     // Check if lock period has expired
     const lockExpiry = position.lockExpiry;

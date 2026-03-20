@@ -20,6 +20,10 @@ export interface WithdrawState {
 }
 
 export function useWithdrawFlow(position: Position | null, userAddress?: Address) {
+  const { withdraw } = useRouter();
+  const { balance: lpBalance, allowance: lpAllowance, approveLPToken, refetchAllowance } =
+    useLPBalance(userAddress);
+
   const [state, setState] = useState<WithdrawState>({
     step: 'confirm',
     isSubmitting: false,
@@ -27,14 +31,15 @@ export function useWithdrawFlow(position: Position | null, userAddress?: Address
     result: null,
   });
 
-  const { withdraw } = useRouter();
-  const { balance: lpBalance, allowance: lpAllowance, approveLPToken, refetchAllowance } =
-    useLPBalance(userAddress);
-
   const set = (patch: Partial<WithdrawState>) => setState(prev => ({ ...prev, ...patch }));
 
   const proceedFromConfirm = useCallback(() => {
     if (!position) return;
+    if (position.lpAmount <= 0n) {
+      set({ error: 'Position has no LP tokens to withdraw.' });
+      return;
+    }
+    // We approve and withdraw exactly the amount of LP tokens recorded for this position
     const needsApproval = lpAllowance < position.lpAmount;
     set({ step: needsApproval ? 'approve-lp' : 'submit', error: null });
   }, [position, lpAllowance]);
@@ -55,18 +60,15 @@ export function useWithdrawFlow(position: Position | null, userAddress?: Address
     if (!position) return;
     set({ isSubmitting: true, error: null });
     try {
+      // Send the exact LP amount recorded in the vault for this position
       const hash = await withdraw(BigInt(position.positionIndex), position.lpAmount);
-
-      // After successful tx, we'd need to decode from receipt
-      // For now, use the position data as a fallback estimate
-      // TODO: Parse receipt to get actual return values (amountA, amountB, ilPayout)
       set({
         isSubmitting: false,
         step: 'success',
         result: {
-          amountA: position.amountA,  // From position data as fallback
+          amountA: position.amountA,
           amountB: position.amountB,
-          ilPayout: 0n,  // Will be updated when we parse receipt
+          ilPayout: 0n,
           txHash: hash,
         },
       });

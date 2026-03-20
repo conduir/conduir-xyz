@@ -40,9 +40,9 @@ export function useDepositFlow(userAddress?: Address, protocolAddress?: Address)
   const { data: poolId, isLoading: poolIdLoading, error: poolIdError } = useComputePoolId(TOKEN_A, TOKEN_B);
   const { writeContractAsync } = useWriteContract();
 
-  // Forced to 18 decimals as per user requirement
-  const decimalsA = 18;
-  const decimalsB = 18;
+  // Updated to 6 decimals as per user requirement
+  const decimalsA = 6;
+  const decimalsB = 6;
 
   const { data: allowanceA, refetch: refetchA } = useReadContract({
     address: TOKEN_A, abi: ERC20_ABI, functionName: 'allowance',

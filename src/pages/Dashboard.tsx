@@ -1,10 +1,23 @@
 import React, { useState } from 'react';
-import { useAccount } from 'wagmi';
-import { Shield, Layers, TrendingDown, RefreshCw, ExternalLink, Lock, ArrowUpRight } from 'lucide-react';
+import { useAccount, useReadContract, useWriteContract } from 'wagmi';
+import { formatUnits } from 'viem';
+import { 
+  Plus, 
+  ArrowUpRight, 
+  RefreshCw, 
+  Shield, 
+  TrendingDown, 
+  Wallet,
+  Layers,
+  ExternalLink,
+  CheckCircle2,
+  Lock as LockIcon
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+
 import { useTokenPrice } from '../web3/hooks/useOracle';
 import { useUserPositions, calcIL, formatAmount, type Position } from '../web3/hooks/useILVault';
-import { usePoolInfo, useComputePoolId } from '../web3/hooks/useRouter';
+import { usePoolInfo, useComputePoolId, useLPBalance } from '../web3/hooks/useRouter';
 import { getContractAddress } from '../web3/contracts/addresses';
 import { polkadotTestnet } from '../web3/config/chains';
 import { DepositFlow } from '../components/flows/DepositFlow';
@@ -109,11 +122,12 @@ function PoolCard({ onDeposit }: { onDeposit: () => void }) {
   );
 }
 
-function PositionsCard({ positions, isLoading, onWithdraw, onRefresh }: {
+function PositionsCard({ positions, isLoading, onWithdraw, onRefresh, lpBalance }: {
   positions: Position[];
   isLoading: boolean;
   onWithdraw: (p: Position) => void;
   onRefresh: () => void;
+  lpBalance: bigint;
 }) {
   return (
     <div className="card card-blue p-6">
@@ -128,6 +142,22 @@ function PositionsCard({ positions, isLoading, onWithdraw, onRefresh }: {
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
         </button>
+      </div>
+
+      <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-6">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-[#FF0877]/10 flex items-center justify-center">
+            <Layers className="w-4 h-4 text-[#FF0877]" />
+          </div>
+          <div>
+            <p className="font-data text-[10px] uppercase tracking-widest text-zinc-600">Total LP Tokens (Wallet)</p>
+            <p className="font-data text-sm text-white font-medium mt-0.5">{formatAmount(lpBalance, 18)} <span className="text-[10px] text-zinc-700 font-normal ml-1">LP</span></p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="font-data text-[10px] uppercase tracking-widest text-zinc-700">Decimals</p>
+          <p className="font-data text-[10px] text-zinc-500 mt-0.5">18 Fixed</p>
+        </div>
       </div>
 
       {isLoading ? (
@@ -160,7 +190,7 @@ function PositionsCard({ positions, isLoading, onWithdraw, onRefresh }: {
                   <div>
                     <StatusPill status={p.status} />
                     <div className="flex items-center gap-1.5 mt-1">
-                      <Lock className="w-3 h-3 text-zinc-700" />
+                      <LockIcon className="w-3.5 h-3.5 text-zinc-600" />
                       <p className="font-data text-[11px] text-zinc-600">
                         {p.isLockExpired
                           ? <span className="text-emerald-400">Unlocked</span>
@@ -184,11 +214,10 @@ function PositionsCard({ positions, isLoading, onWithdraw, onRefresh }: {
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/[0.05]">
+              <div className="grid grid-cols-2 gap-2 pt-3 border-t border-white/[0.05]">
                 {[
                   { label: 'Token A', value: formatAmount(p.amountA) },
                   { label: 'Token B', value: formatAmount(p.amountB) },
-                  { label: 'LP Tokens', value: formatAmount(p.lpAmount) },
                 ].map(({ label, value }) => (
                   <div key={label}>
                     <p className="font-data text-[10px] uppercase tracking-[0.1em] text-zinc-700 mb-0.5">{label}</p>
@@ -271,7 +300,7 @@ function ILChecker({ positions }: { positions: Position[] }) {
                 {activePositions.map(p => {
                   const il = calcIL(p.entryPrice, currentPriceA);
                   const ilPct = (il * 100).toFixed(2);
-                  const ilAmt = Math.abs(il) * parseFloat(formatUnits(p.amountA, 18));
+                  const ilAmt = Math.abs(il) * parseFloat(formatUnits(p.amountA, 6));
                   const isLoss = il < -0.001;
                   return (
                     <div key={p.positionId.toString()} className="stat-cell p-4">
@@ -288,11 +317,11 @@ function ILChecker({ positions }: { positions: Position[] }) {
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-2 font-data text-[11px] text-zinc-600 mb-2">
-                        <span>Entry: <span className="text-zinc-400">${formatAmount(p.entryPrice)}</span></span>
-                        <span>Current: <span className="text-zinc-400">${formatAmount(currentPriceA)}</span></span>
+                        <span>Entry: <span className="text-zinc-400">${formatAmount(p.entryPrice, 18)}</span></span>
+                        <span>Current: <span className="text-zinc-400">${formatAmount(currentPriceA, 18)}</span></span>
                       </div>
                       <div className={`font-data text-[11px] px-3 py-2 rounded-lg ${isLoss ? 'bg-red-500/[0.08] text-red-400' : 'bg-emerald-500/[0.08] text-emerald-400'}`}>
-                        {isLoss ? `~${ilAmt.toLocaleString('id-ID', { minimumFractionDigits: 4, maximumFractionDigits: 4 })} Token A IL — covered by protocol` : 'No significant IL at current price'}
+                        {isLoss ? `~${ilAmt.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Token A IL — covered by protocol` : 'No significant IL at current price'}
                       </div>
                     </div>
                   );
@@ -341,7 +370,7 @@ function ILChecker({ positions }: { positions: Position[] }) {
                   {calcResult.ilAmount !== null && (
                     <div className="flex items-center justify-between pt-2 border-t border-white/[0.05]">
                       <span className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600">Estimated Loss</span>
-                      <span className="font-data text-sm text-amber-400">{calcResult.ilAmount.toFixed(4)} <span className="text-zinc-600">(deposit units)</span></span>
+                      <span className="font-data text-sm text-amber-400">{calcResult.ilAmount.toFixed(2)} <span className="text-zinc-600">(deposit units)</span></span>
                     </div>
                   )}
                   <div className="flex items-start gap-2 pt-2 border-t border-white/[0.05]">
@@ -365,6 +394,8 @@ export default function Dashboard() {
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const { positions, isLoading: positionsLoading, refetch: refetchPositions } = useUserPositions(address);
+  const { balance: lpBalance } = useLPBalance(address);
+
 
   return (
     <div className="min-h-screen bg-[#050508] grid-bg pt-20">
@@ -423,6 +454,7 @@ export default function Dashboard() {
                       key="positions"
                       positions={positions}
                       isLoading={positionsLoading}
+                      lpBalance={lpBalance}
                       onWithdraw={p => { setSelectedPosition(p); setWithdrawOpen(true); }}
                       onRefresh={refetchPositions}
                     />,

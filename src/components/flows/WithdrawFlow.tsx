@@ -61,6 +61,7 @@ export function WithdrawFlow({ isOpen, onClose, position, userAddress, onSuccess
             >
               {(state.step === 'confirm' || state.step === 'approve-lp' || state.step === 'submit') && (
                 <div className="space-y-4">
+                  {/* Position summary */}
                   <div className="stat-cell p-4 space-y-3">
                     <div className="flex justify-between">
                       <span className="font-data text-xs text-zinc-500">Pool ID</span>
@@ -69,7 +70,6 @@ export function WithdrawFlow({ isOpen, onClose, position, userAddress, onSuccess
                     {[
                       { label: 'Token A Deposit', value: formatAmount(position.amountA) },
                       { label: 'Token B Deposit', value: formatAmount(position.amountB) },
-                      { label: 'LP Tokens',         value: formatAmount(position.lpAmount) },
                     ].map(({ label, value }) => (
                       <div key={label} className="flex justify-between">
                         <span className="font-data text-xs text-zinc-500">{label}</span>
@@ -83,6 +83,19 @@ export function WithdrawFlow({ isOpen, onClose, position, userAddress, onSuccess
                       </span>
                     </div>
                   </div>
+
+                  {/* LP token full amount display */}
+                  {state.step === 'confirm' && (
+                    <div className="stat-cell p-4 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600">LP Tokens to Withdraw</span>
+                        <span className="font-data text-xs text-white">
+                          {parseFloat(formatUnits(position.lpAmount, 18)).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} LP
+                        </span>
+                      </div>
+                      <p className="font-data text-[10px] text-zinc-500 pt-1">Withdrawing requires removing 100% of the LP tokens for this position.</p>
+                    </div>
+                  )}
 
                   {/* Settlement Estimate */}
                   {estimate && state.step === 'confirm' && (
@@ -115,19 +128,40 @@ export function WithdrawFlow({ isOpen, onClose, position, userAddress, onSuccess
                     </div>
                   )}
 
+                  {/* approve-lp info card */}
+                  {state.step === 'approve-lp' && (
+                    <div className="stat-cell p-4 space-y-2">
+                      <div className="flex justify-between">
+                        <span className="font-data text-xs text-zinc-500">LP Tokens</span>
+                        <span className="font-data text-xs text-white">
+                          {parseFloat(formatUnits(position.lpAmount, 18)).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} LP
+                        </span>
+                      </div>
+                      <div className="bg-amber-500/8 border border-amber-500/20 rounded-xl p-3 mt-2">
+                        <p className="font-data text-xs text-amber-400 font-medium mb-1 uppercase tracking-widest">Approve LP Token</p>
+                        <p className="font-data text-[11px] text-amber-400/70">Allow the Router to burn your LP tokens during withdrawal.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* submit confirmation */}
+                  {state.step === 'submit' && (
+                    <div className="stat-cell p-4 space-y-2">
+                      <div className="flex justify-between">
+                        <span className="font-data text-xs text-zinc-500">LP Tokens</span>
+                        <span className="font-data text-xs text-white">
+                          {parseFloat(formatUnits(position.lpAmount, 18)).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} LP
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {!lockExpired && (
                     <div className="flex items-start gap-2.5 bg-amber-500/8 border border-amber-500/20 rounded-xl p-3">
                       <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
                       <p className="font-data text-[11px] text-amber-400">
                         Lock expires {position.lockExpiry.toLocaleDateString()}. Cannot withdraw yet.
                       </p>
-                    </div>
-                  )}
-
-                  {state.step === 'approve-lp' && (
-                    <div className="bg-amber-500/8 border border-amber-500/20 rounded-xl p-4">
-                      <p className="font-data text-xs text-amber-400 font-medium mb-1 uppercase tracking-widest">Approve LP Token</p>
-                      <p className="font-data text-[11px] text-amber-400/70">Allow the Router to burn your LP tokens during withdrawal.</p>
                     </div>
                   )}
 

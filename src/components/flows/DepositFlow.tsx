@@ -109,7 +109,7 @@ export function DepositFlow({ isOpen, onClose, userAddress, onSuccess }: Props) 
                           className="absolute right-3 top-1/2 -translate-y-1/2 font-data text-[10px] uppercase tracking-widest text-[#FF0877] bg-[#FF0877]/10 hover:bg-[#FF0877]/20 px-2 py-1 rounded transition-colors"
                         >Max</button>
                       </div>
-                      <p className="font-data text-[10px] text-zinc-700 mt-1">Balance: {parseFloat(bal).toFixed(4)}</p>
+                      <p className="font-data text-[10px] text-zinc-700 mt-1">Balance: {parseFloat(bal).toFixed(2).replace('.', ',')}</p>
                     </div>
                   ))}
 
@@ -139,8 +139,8 @@ export function DepositFlow({ isOpen, onClose, userAddress, onSuccess }: Props) 
                 <div className="space-y-4">
                   <div className="stat-cell p-4 space-y-2">
                     {[
-                      { label: 'Token A', value: parseFloat(state.amountA).toFixed(4) },
-                      { label: 'Token B', value: parseFloat(state.amountB).toFixed(4) },
+                      { label: 'Token A', value: parseFloat(state.amountA).toFixed(2).replace('.', ',') },
+                      { label: 'Token B', value: parseFloat(state.amountB).toFixed(2).replace('.', ',') },
                       { label: 'Lock',    value: `${state.lockDays} days` },
                     ].map(({ label, value }) => (
                       <div key={label} className="flex justify-between">
@@ -178,8 +178,8 @@ export function DepositFlow({ isOpen, onClose, userAddress, onSuccess }: Props) 
                 <div className="space-y-4">
                   <div className="stat-cell p-4 space-y-3">
                     {[
-                      { label: 'Token A',      value: `${parseFloat(state.amountA).toFixed(4)}` },
-                      { label: 'Token B',      value: `${parseFloat(state.amountB).toFixed(4)}` },
+                      { label: 'Token A',      value: `${parseFloat(state.amountA).toFixed(2).replace('.', ',')}` },
+                      { label: 'Token B',      value: `${parseFloat(state.amountB).toFixed(2).replace('.', ',')}` },
                       { label: 'Lock Duration', value: `${state.lockDays} days` },
                       { label: 'Protocol',     value: KNOWN_PROTOCOLS[0].label },
                       { label: 'IL Protection', value: '100% Covered', accent: true },
