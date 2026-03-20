@@ -164,8 +164,8 @@ function PositionsCard({ positions, isLoading, onWithdraw, onRefresh }: {
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#FF0877]/10 border border-[#FF0877]/20 flex items-center justify-center flex-shrink-0">
-                    <span className="font-data text-[10px] text-[#FF0877]">#{p.positionId.toString()}</span>
+                  <div className="w-20 h-8 rounded-lg bg-[#FF0877]/10 border border-[#FF0877]/20 flex items-center justify-center flex-shrink-0">
+                    <span className="font-data text-[10px] text-[#FF0877]">#{p.positionId.toString().slice(0, 8)}...</span>
                   </div>
                   <div>
                     <StatusPill status={p.status} />
@@ -286,7 +286,7 @@ function ILChecker({ positions }: { positions: Position[] }) {
                   return (
                     <div key={p.positionId.toString()} className="stat-cell p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-data text-sm text-zinc-400">Position #{p.positionId.toString()}</span>
+                        <span className="font-data text-xs text-zinc-400">Position #{p.positionId.toString().slice(0, 8)}...</span>
                         <span className={`font-data text-sm font-medium ${isLoss ? 'text-red-400' : 'text-emerald-400'}`}>
                           {il < 0 ? '' : '+'}{ilPct}%
                         </span>
@@ -298,11 +298,11 @@ function ILChecker({ positions }: { positions: Position[] }) {
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-2 font-data text-[11px] text-zinc-600 mb-2">
-                        <span>Entry: <span className="text-zinc-400">${formatUnits(p.entryPrice, 18).slice(0, 8)}</span></span>
-                        <span>Current: <span className="text-zinc-400">${currentPriceA}</span></span>
+                        <span>Entry: <span className="text-zinc-400">${formatAmount(p.entryPrice)}</span></span>
+                        <span>Current: <span className="text-zinc-400">${formatAmount(currentPriceA)}</span></span>
                       </div>
                       <div className={`font-data text-[11px] px-3 py-2 rounded-lg ${isLoss ? 'bg-red-500/[0.08] text-red-400' : 'bg-emerald-500/[0.08] text-emerald-400'}`}>
-                        {isLoss ? `~${ilAmt.toFixed(4)} Token A IL — covered by protocol` : 'No significant IL at current price'}
+                        {isLoss ? `~${ilAmt.toLocaleString('id-ID', { minimumFractionDigits: 4, maximumFractionDigits: 4 })} Token A IL — covered by protocol` : 'No significant IL at current price'}
                       </div>
                     </div>
                   );

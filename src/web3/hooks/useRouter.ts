@@ -164,3 +164,16 @@ export function useComputePoolId(tokenA?: Address, tokenB?: Address) {
     query: { enabled: !!tokenA && !!tokenB },
   });
 }
+
+export function useUserLPPositions(userAddress?: Address) {
+  const routerAddress = getContractAddress('router');
+
+  return useReadContract({
+    address: routerAddress,
+    abi: ROUTER_ABI,
+    functionName: 'getLPPositions',
+    args: userAddress ? [userAddress] : undefined,
+    chainId: polkadotTestnet.id,
+    query: { enabled: !!userAddress },
+  });
+}

@@ -4,6 +4,7 @@ import { X, CheckCircle2, ExternalLink, Loader2, AlertTriangle } from 'lucide-re
 import { formatUnits } from 'viem';
 import { useWithdrawFlow } from '../../hooks/useWithdrawFlow';
 import { useSettleIL } from '../../web3/hooks/useSettleIL';
+import { formatAmount } from '../../web3/hooks/useILVault';
 import type { Position } from '../../web3/hooks/useILVault';
 import type { Address } from 'viem';
 
@@ -41,10 +42,10 @@ export function WithdrawFlow({ isOpen, onClose, position, userAddress, onSuccess
               {state.step === 'success' ? 'Complete' : 'Withdraw Position'}
             </p>
             <h2 className="font-display font-bold text-lg mt-0.5">
-              Position #{position.positionId.toString()}
+              Position #{position.positionId.toString().slice(0, 8)}...
             </h2>
           </div>
-          <button onClick={handleClose} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors">
+          <button onClick={handleClose} title="Close" className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -61,10 +62,14 @@ export function WithdrawFlow({ isOpen, onClose, position, userAddress, onSuccess
               {(state.step === 'confirm' || state.step === 'approve-lp' || state.step === 'submit') && (
                 <div className="space-y-4">
                   <div className="stat-cell p-4 space-y-3">
+                    <div className="flex justify-between">
+                      <span className="font-data text-xs text-zinc-500">Pool ID</span>
+                      <span className="font-data text-xs text-white opacity-60">{position.poolId.slice(0, 8)}...{position.poolId.slice(-4)}</span>
+                    </div>
                     {[
-                      { label: 'Token A Deposited', value: `${parseFloat(formatUnits(position.amountA, 18)).toFixed(4)}` },
-                      { label: 'Token B Deposited', value: `${parseFloat(formatUnits(position.amountB, 18)).toFixed(4)}` },
-                      { label: 'LP Tokens',         value: `${parseFloat(formatUnits(position.lpAmount, 18)).toFixed(4)}` },
+                      { label: 'Token A Deposit', value: formatAmount(position.amountA) },
+                      { label: 'Token B Deposit', value: formatAmount(position.amountB) },
+                      { label: 'LP Tokens',         value: formatAmount(position.lpAmount) },
                     ].map(({ label, value }) => (
                       <div key={label} className="flex justify-between">
                         <span className="font-data text-xs text-zinc-500">{label}</span>
@@ -74,7 +79,7 @@ export function WithdrawFlow({ isOpen, onClose, position, userAddress, onSuccess
                     <div className="flex justify-between pt-3 border-t border-white/[0.05]">
                       <span className="font-data text-xs text-zinc-500">Lock Status</span>
                       <span className={`font-data text-xs font-medium ${lockExpired ? 'text-emerald-400' : 'text-amber-400'}`}>
-                        {lockExpired ? 'Unlocked ✓' : position.lockExpiry.toLocaleDateString()}
+                        {lockExpired ? 'Unlocked ✓' : `Ends ${position.lockExpiry.toLocaleDateString()}`}
                       </span>
                     </div>
                   </div>

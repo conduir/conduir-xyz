@@ -3,6 +3,7 @@ import { formatUnits, numberToHex, hexToNumber } from 'viem';
 import { getContractAddress } from '../contracts/addresses';
 import { IL_VAULT_ABI, POSITION_STATUS } from '../contracts/abi';
 import { polkadotTestnet } from '../config/chains';
+import { useUserLPPositions } from './useRouter';
 import type { Address, Hex } from 'viem';
 
 export type PositionStatus = 'ACTIVE' | 'SETTLED' | 'EXPIRED';
@@ -43,21 +44,21 @@ export function usePosition(positionId: Hex) {
 
   if (!data) return { position: null, isLoading, refetch };
 
-  const posNum = hexToNumber(positionId);
-  const lockExpiry = new Date((Number(data[6]) + Number(data[7])) * 1000);
+  const d = data as any;
+  const lockExpiry = new Date(Number(d.lockExpiry || d[6]) * 1000);
   const position: Position = {
     positionId,
-    positionIndex: posNum - 1, // positionIndex = positionId - 1 (0-based)
-    owner: data[0],
-    poolId: data[1],
-    protocolAddress: data[2],
-    amountA: data[3],
-    amountB: data[4],
-    entryPrice: data[5],
-    lockStart: data[6],
-    lockDuration: data[7],
-    lpAmount: data[8],
-    status: parseStatus(data[9]),
+    positionIndex: hexToNumber(positionId) - 1,
+    owner: d.lp || d[0],
+    poolId: d.poolId || d[1],
+    protocolAddress: d.protocol || d[2],
+    amountA: d.amountA || d[3] || 0n,
+    amountB: d.amountB || d[4] || 0n,
+    entryPrice: d.entryPrice || d[5] || 0n,
+    lockStart: d.depositTime || d[7] || 0n,
+    lockDuration: (d.lockExpiry && d.depositTime) ? (d.lockExpiry - d.depositTime) : (d.lockExpiry || d[6] || 0n),
+    lpAmount: d.voucherAmount || d[8] || 0n,
+    status: parseStatus(Number(d.status || d[9] || 0)),
     lockExpiry,
     isLockExpired: lockExpiry < new Date(),
   };
@@ -68,52 +69,68 @@ export function usePosition(positionId: Hex) {
 // Reads up to `maxPositions` positions for a user by scanning positionIds
 // The contract assigns sequential positionIds starting from 1.
 // We scan IDs 1..maxPositions and filter by owner.
-export function useUserPositions(userAddress?: Address, maxPositions = 20) {
+export function useUserPositions(userAddress?: Address) {
   const ilVaultAddress = getContractAddress('ilVault');
+  const { data: lpPositions, isLoading: lpLoading, refetch: refetchLP } = useUserLPPositions(userAddress);
 
-  const contracts = Array.from({ length: maxPositions }, (_, i) => ({
+  const contracts = (lpPositions || []).map((pos: any) => ({
     address: ilVaultAddress,
     abi: IL_VAULT_ABI,
     functionName: 'getPosition' as const,
-    args: [numberToHex(BigInt(i + 1), { size: 32 })] as const,
+    args: [pos.positionId] as const,
     chainId: polkadotTestnet.id,
   }));
 
-  const { data, isLoading, refetch } = useReadContracts({
+  const { data, isLoading: detailsLoading, refetch: refetchDetails } = useReadContracts({
     contracts,
-    query: { enabled: !!userAddress },
+    query: { enabled: !!userAddress && contracts.length > 0 },
   });
 
   const positions: Position[] = [];
 
-  if (data && userAddress) {
+  if (data && lpPositions) {
     data.forEach((result, i) => {
       if (result.status !== 'success' || !result.result) return;
-      const d = result.result;
-      if (d[0].toLowerCase() !== userAddress.toLowerCase()) return;
+      const d = result.result as any;
+      const originalPos = lpPositions[i];
 
-      const positionId = numberToHex(BigInt(i + 1), { size: 32 });
-      const lockExpiry = new Date((Number(d[6]) + Number(d[7])) * 1000);
+      // Filter: Only include ACTIVE positions as seen by both Router and ILVault
+      // This hides settled/empty positions from the "Active Deposits" list
+      const isActive = originalPos.active && (Number(d.status || d[9] || 0) === 0);
+      const isNotEmpty = (d.amountA || d[3] || 0n) > 0n || (d.amountB || d[4] || 0n) > 0n;
+
+      if (!isActive || !isNotEmpty) return;
+
+      const lockExpiry = new Date(Number(d.lockExpiry || d[6]) * 1000);
       positions.push({
-        positionId,
+        positionId: originalPos.positionId,
         positionIndex: i,
-        owner: d[0],
-        poolId: d[1],
-        protocolAddress: d[2],
-        amountA: d[3],
-        amountB: d[4],
-        entryPrice: d[5],
-        lockStart: d[6],
-        lockDuration: d[7],
-        lpAmount: d[8],
-        status: parseStatus(d[9]),
+        owner: d.lp || d[0],
+        poolId: originalPos.poolId || d.poolId || d[1],
+        protocolAddress: d.protocol || d[2],
+        amountA: d.amountA || d[3] || 0n,
+        amountB: d.amountB || d[4] || 0n,
+        entryPrice: d.entryPrice || d[5] || 0n,
+        lockStart: d.depositTime || d[7] || 0n,
+        lockDuration: (d.lockExpiry && d.depositTime) ? (d.lockExpiry - d.depositTime) : (d.lockExpiry || d[6] || 0n),
+        lpAmount: d.voucherAmount || d[8] || 0n,
+        status: 'ACTIVE',
         lockExpiry,
         isLockExpired: lockExpiry < new Date(),
       });
     });
   }
 
-  return { positions, isLoading, refetch };
+  const refetch = async () => {
+    await refetchLP();
+    await refetchDetails();
+  };
+
+  return { 
+    positions, 
+    isLoading: lpLoading || detailsLoading, 
+    refetch 
+  };
 }
 
 export function calcIL(entryPrice: bigint, currentPrice: bigint): number {
@@ -122,8 +139,15 @@ export function calcIL(entryPrice: bigint, currentPrice: bigint): number {
   return (2 * Math.sqrt(P)) / (1 + P) - 1; // negative = loss
 }
 
-export function formatAmount(amount: bigint, decimals = 18): string {
-  return parseFloat(formatUnits(amount, decimals)).toLocaleString(undefined, {
-    maximumFractionDigits: 4,
-  });
+export function formatAmount(amount: bigint | undefined | null, decimals = 18): string {
+  if (amount === undefined || amount === null) return '0,0000';
+  try {
+    return parseFloat(formatUnits(amount, decimals)).toLocaleString('id-ID', {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
+    });
+  } catch (e) {
+    console.error('Error formatting amount:', e, amount);
+    return '0,0000';
+  }
 }

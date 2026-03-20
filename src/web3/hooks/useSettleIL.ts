@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { formatUnits } from 'viem';
 import { getContractAddress } from '../contracts/addresses';
 import { useTokenPrice } from './useOracle';
+import { formatAmount } from './useILVault';
 import type { Position } from './useILVault';
 
 export interface SettlementEstimate {
@@ -48,7 +49,7 @@ export function useSettleIL(position: Position | null) {
     const ilPayout = BigInt(Math.floor(ilAmount * 1e18));
 
     // Check if lock period has expired
-    const lockExpiry = new Date((Number(position.lockStart) + Number(position.lockDuration)) * 1000);
+    const lockExpiry = position.lockExpiry;
     const canSettle = lockExpiry <= new Date();
 
     return {
@@ -57,9 +58,9 @@ export function useSettleIL(position: Position | null) {
       ilPayout,
       ilPercentage,
       formatted: {
-        amountA: parseFloat(formatUnits(amountA, 18)).toFixed(4),
-        amountB: parseFloat(formatUnits(amountB, 18)).toFixed(4),
-        ilPayout: parseFloat(formatUnits(ilPayout, 18)).toFixed(4),
+        amountA: formatAmount(amountA),
+        amountB: formatAmount(amountB),
+        ilPayout: formatAmount(ilPayout),
       },
       canSettle,
       isDemoMode: isDemo,
