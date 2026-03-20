@@ -5,9 +5,10 @@ import { Shield, Layers, TrendingDown, RefreshCw, ExternalLink, Lock, ArrowUpRig
 import { motion, AnimatePresence } from 'motion/react';
 import { useTokenPrice } from '../web3/hooks/useOracle';
 import { useUserPositions, calcIL, formatAmount, type Position } from '../web3/hooks/useILVault';
-import { usePoolInfo } from '../web3/hooks/useRouter';
+import { usePoolInfo, useComputePoolId } from '../web3/hooks/useRouter';
 import { useVoucherBalance } from '../web3/hooks/useVoucher';
 import { getContractAddress } from '../web3/contracts/addresses';
+import { polkadotTestnet } from '../web3/config/chains';
 import { DepositFlow } from '../components/flows/DepositFlow';
 import { WithdrawFlow } from '../components/flows/WithdrawFlow';
 import { RegisterProtocolFlow } from '../components/flows/RegisterProtocolFlow';
@@ -47,13 +48,14 @@ function StatusPill({ status }: { status: Position['status'] }) {
 
 function PoolCard({ onDeposit }: { onDeposit: () => void }) {
   const { reserveA, reserveB, isLoading: resLoad, refetch } = usePoolInfo();
+  const { data: poolId, isLoading: poolIdLoading, error: poolIdError } = useComputePoolId(TOKEN_A, TOKEN_B);
   const { formattedPrice: priceA, updatedAt: updA, isLoading: pALoad, isDemoMode: demoA } = useTokenPrice(TOKEN_A);
   const { formattedPrice: priceB, updatedAt: updB, isLoading: pBLoad, isDemoMode: demoB } = useTokenPrice(TOKEN_B);
   const loading = resLoad || pALoad || pBLoad;
 
   const stats = [
-    { label: 'Token A Price', value: `$${priceA}`, sub: updA?.toLocaleTimeString(), loading: pALoad, isDemo: demoA },
-    { label: 'Token B Price', value: `$${priceB}`, sub: updB?.toLocaleTimeString(), loading: pBLoad, isDemo: demoB },
+    { label: 'Token A Price', value: pALoad ? '...' : `$${priceA}`, sub: updA?.toLocaleTimeString(), loading: pALoad, isDemo: demoA },
+    { label: 'Token B Price', value: pBLoad ? '...' : `$${priceB}`, sub: updB?.toLocaleTimeString(), loading: pBLoad, isDemo: demoB },
     { label: 'Reserve A',     value: formatAmount(reserveA), sub: 'tokens', loading: resLoad },
     { label: 'Reserve B',     value: formatAmount(reserveB), sub: 'tokens', loading: resLoad },
   ];
@@ -64,7 +66,9 @@ function PoolCard({ onDeposit }: { onDeposit: () => void }) {
         <div>
           <p className="font-data text-[10px] uppercase tracking-[0.18em] text-zinc-600 mb-1">Liquidity Pool</p>
           <h2 className="text-2xl font-display font-bold tracking-tight text-white">Token A / Token B</h2>
-          <p className="font-data text-xs text-zinc-600 mt-0.5">ConstantAMM · Pool ID 0</p>
+          <p className="font-data text-xs text-zinc-600 mt-0.5">
+            ConstantAMM · Pool ID {poolId ? `${poolId.slice(0, 8)}...${poolId.slice(-6)}` : (poolIdLoading ? '...' : '0')}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 font-data text-[10px] uppercase tracking-[0.15em] text-emerald-400">
@@ -379,6 +383,7 @@ export default function Dashboard() {
     abi: COLLATERAL_MANAGER_ABI,
     functionName: 'getCollateralHealth',
     args: address ? [address] : undefined,
+    chainId: polkadotTestnet.id,
     query: { enabled: !!address },
   });
   const isRegistered = (collateralHealth ?? 0n) > 0n;

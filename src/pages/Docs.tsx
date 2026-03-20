@@ -795,7 +795,7 @@ healthRatio = (collateralBalance / minimumRequired) * 100%`}
                     <h4 className="font-bold text-white mb-2">Register Protocol</h4>
                     <p className="text-sm text-slate-400 mb-2">Register with the pool ID you want to associate with your protocol:</p>
                     <div className="bg-black/30 p-3 rounded-xl">
-                      <code className="text-xs text-emerald-400">{`router.registerProtocol(poolId, initialCollateral);`}</code>
+                      <code className="text-xs text-emerald-400">{`router.registerProtocol("0x...", initialCollateral);`}</code>
                     </div>
                     <p className="text-xs text-slate-500 mt-2">After this: listing fee goes to treasury, collateral is stored in CollateralManager, and your protocol is assigned a tier (TIER_1/2/3) based on pool volatility from the Oracle.</p>
                   </div>

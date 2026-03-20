@@ -3,8 +3,9 @@ import { parseUnits, formatUnits } from 'viem';
 import { useReadContract, useWriteContract } from 'wagmi';
 import { getContractAddress } from '../web3/contracts/addresses';
 import { ERC20_ABI } from '../web3/contracts/abi';
-import { useRouter } from '../web3/hooks/useRouter';
-import type { Address } from 'viem';
+import { useRouter, useComputePoolId } from '../web3/hooks/useRouter';
+import { polkadotTestnet } from '../web3/config/chains';
+import type { Address, Hex } from 'viem';
 
 export type DepositStep = 'amount' | 'approve-a' | 'approve-b' | 'confirm' | 'success';
 
@@ -18,7 +19,7 @@ export interface DepositState {
   txHash: string | null;
 }
 
-const POOL_ID = 0n;
+const PROTOCOL_ADDRESS: Address = '0x30c4F6A4592332AF7BC8c991be5120E6Db259956';
 
 const TOKEN_A = getContractAddress('tokenA');
 const TOKEN_B = getContractAddress('tokenB');
@@ -36,34 +37,41 @@ export function useDepositFlow(userAddress?: Address, protocolAddress?: Address)
   });
 
   const { deposit } = useRouter();
+  const { data: poolId, isLoading: poolIdLoading, error: poolIdError } = useComputePoolId(TOKEN_A, TOKEN_B);
   const { writeContractAsync } = useWriteContract();
 
   // Fetch decimals dynamically from token contracts
   const { data: decimalsA = 18 } = useReadContract({
     address: TOKEN_A, abi: ERC20_ABI, functionName: 'decimals',
+    chainId: polkadotTestnet.id,
   });
   const { data: decimalsB = 18 } = useReadContract({
     address: TOKEN_B, abi: ERC20_ABI, functionName: 'decimals',
+    chainId: polkadotTestnet.id,
   });
 
   const { data: allowanceA, refetch: refetchA } = useReadContract({
     address: TOKEN_A, abi: ERC20_ABI, functionName: 'allowance',
     args: userAddress ? [userAddress, ROUTER] : undefined,
+    chainId: polkadotTestnet.id,
     query: { enabled: !!userAddress },
   });
   const { data: allowanceB, refetch: refetchB } = useReadContract({
     address: TOKEN_B, abi: ERC20_ABI, functionName: 'allowance',
     args: userAddress ? [userAddress, ROUTER] : undefined,
+    chainId: polkadotTestnet.id,
     query: { enabled: !!userAddress },
   });
   const { data: balanceA, error: balanceAError } = useReadContract({
     address: TOKEN_A, abi: ERC20_ABI, functionName: 'balanceOf',
     args: userAddress ? [userAddress] : undefined,
+    chainId: polkadotTestnet.id,
     query: { enabled: !!userAddress },
   });
   const { data: balanceB, error: balanceBError } = useReadContract({
     address: TOKEN_B, abi: ERC20_ABI, functionName: 'balanceOf',
     args: userAddress ? [userAddress] : undefined,
+    chainId: polkadotTestnet.id,
     query: { enabled: !!userAddress },
   });
 
@@ -99,10 +107,11 @@ export function useDepositFlow(userAddress?: Address, protocolAddress?: Address)
   const approveA = useCallback(async () => {
     set({ isSubmitting: true, error: null });
     try {
-      // @ts-expect-error wagmi writeContractAsync types require chain/account at call site
       await writeContractAsync({
         address: TOKEN_A, abi: ERC20_ABI, functionName: 'approve',
         args: [ROUTER, 2n ** 256n - 1n],
+        account: userAddress,
+        chain: polkadotTestnet,
       });
       await refetchA();
       const amtB = parseUnits(state.amountB, decimalsB);
@@ -116,10 +125,11 @@ export function useDepositFlow(userAddress?: Address, protocolAddress?: Address)
   const approveB = useCallback(async () => {
     set({ isSubmitting: true, error: null });
     try {
-      // @ts-expect-error wagmi writeContractAsync types require chain/account at call site
       await writeContractAsync({
         address: TOKEN_B, abi: ERC20_ABI, functionName: 'approve',
         args: [ROUTER, 2n ** 256n - 1n],
+        account: userAddress,
+        chain: polkadotTestnet,
       });
       await refetchB();
       set({ isSubmitting: false, step: 'confirm' });
@@ -130,17 +140,21 @@ export function useDepositFlow(userAddress?: Address, protocolAddress?: Address)
 
   const confirmDeposit = useCallback(async () => {
     if (!validateAmounts()) return;
+    if (!poolId) {
+      set({ error: poolIdError ? `Pool not found: ${poolIdError.message}` : 'Computing Pool ID...' });
+      return;
+    }
     set({ isSubmitting: true, error: null });
     try {
       const amtA = parseUnits(state.amountA, decimalsA);
       const amtB = parseUnits(state.amountB, decimalsB);
       const lockDuration = BigInt(state.lockDays) * 86400n;
-      const hash = await deposit(POOL_ID, protocolAddress ?? '0x0000000000000000000000000000000000000001', amtA, amtB, lockDuration);
+      const hash = await deposit(poolId, PROTOCOL_ADDRESS, amtA, amtB, lockDuration);
       set({ isSubmitting: false, step: 'success', txHash: hash });
     } catch (e: any) {
-      set({ isSubmitting: false, error: e?.shortMessage || e?.message || 'Deposit failed' });
+      set({ isSubmitting: false, error: e?.shortMessage || e?.message || 'Deposit failed. Please try again.' });
     }
-  }, [validateAmounts, state.amountA, state.amountB, state.lockDays, deposit, decimalsA, decimalsB]);
+  }, [validateAmounts, state.amountA, state.amountB, state.lockDays, deposit, decimalsA, decimalsB, poolId, poolIdError]);
 
   const reset = useCallback(() => setState({
     step: 'amount', amountA: '', amountB: '', lockDays: 30,

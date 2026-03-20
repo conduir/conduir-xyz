@@ -4,7 +4,8 @@ import { useWriteContract } from 'wagmi';
 import { getContractAddress } from '../web3/contracts/addresses';
 import { ERC20_ABI } from '../web3/contracts/abi';
 import { useRouter } from '../web3/hooks/useRouter';
-import type { Address } from 'viem';
+import { polkadotTestnet } from '../web3/config/chains';
+import type { Address, Hex } from 'viem';
 
 export type RegisterStep = 'collateral' | 'approve-usdc' | 'confirm' | 'success';
 
@@ -19,7 +20,7 @@ export interface RegisterState {
 const LISTING_FEE = parseUnits('100', 18);
 const USDC = getContractAddress('mockUsdc');
 const ROUTER = getContractAddress('router');
-const POOL_ID = 0n;
+const POOL_ID: Hex = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
 export function useRegisterProtocolFlow(_userAddress?: Address) {
   const [state, setState] = useState<RegisterState>({
@@ -49,12 +50,13 @@ export function useRegisterProtocolFlow(_userAddress?: Address) {
     try {
       const collateralBigInt = parseUnits(state.collateralAmount, 18);
       const totalApproval = collateralBigInt + LISTING_FEE;
-      // @ts-expect-error wagmi writeContractAsync types require chain/account at call site
       await writeContractAsync({
         address: USDC,
         abi: ERC20_ABI,
         functionName: 'approve',
         args: [ROUTER, totalApproval],
+        account: _userAddress,
+        chain: polkadotTestnet,
       });
       set({ isSubmitting: false, step: 'confirm' });
     } catch (e: any) {
