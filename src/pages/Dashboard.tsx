@@ -11,6 +11,7 @@ import {
   Layers,
   ExternalLink,
   CheckCircle2,
+  Ticket,
   Lock as LockIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -18,6 +19,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useTokenPrice } from '../web3/hooks/useOracle';
 import { useUserPositions, calcIL, formatAmount, type Position } from '../web3/hooks/useILVault';
 import { usePoolInfo, useComputePoolId, useLPBalance } from '../web3/hooks/useRouter';
+import { useVoucherBalance } from '../web3/hooks/useVoucher';
 import { getContractAddress } from '../web3/contracts/addresses';
 import { polkadotTestnet } from '../web3/config/chains';
 import { DepositFlow } from '../components/flows/DepositFlow';
@@ -394,6 +396,7 @@ export default function Dashboard() {
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const { positions, isLoading: positionsLoading, refetch: refetchPositions } = useUserPositions(address);
+  // const { balance: voucherBalance, refetch: refetchVouchers } = useVoucherBalance(address);
   const { balance: lpBalance } = useLPBalance(address);
 
 
