@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowRight, BookOpen, Menu, X } from 'lucide-react';
+import { ArrowRight, BookOpen, Menu, X, Droplet, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAccount } from 'wagmi';
 import { WalletButton } from './web3/WalletButton';
@@ -64,6 +64,20 @@ export default function Navbar() {
             <BookOpen className="w-4 h-4" />
             Docs
           </Link>
+          <Link
+            to="/faucet"
+            className="flex items-center gap-2 font-data text-xs uppercase tracking-[0.15em] text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            <Droplet className="w-4 h-4" />
+            Faucet
+          </Link>
+          <Link
+            to="/admin"
+            className="flex items-center gap-2 font-data text-xs uppercase tracking-[0.15em] text-purple-400 hover:text-purple-300 transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+            Admin
+          </Link>
           {isAppRoute ? (
             <WalletButton />
           ) : (
@@ -118,6 +132,22 @@ export default function Navbar() {
               >
                 <BookOpen className="w-4 h-4" />
                 Docs
+              </Link>
+              <Link
+                to="/faucet"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2 py-3 font-data text-xs uppercase tracking-[0.15em] text-blue-400 hover:text-blue-300 transition-colors border-b border-white/[0.04]"
+              >
+                <Droplet className="w-4 h-4" />
+                Faucet
+              </Link>
+              <Link
+                to="/admin"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2 py-3 font-data text-xs uppercase tracking-[0.15em] text-purple-400 hover:text-purple-300 transition-colors border-b border-white/[0.04]"
+              >
+                <Settings className="w-4 h-4" />
+                Admin
               </Link>
               {!isAppRoute && (
                 <div className="pt-3">

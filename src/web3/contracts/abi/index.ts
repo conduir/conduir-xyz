@@ -1,3 +1,8 @@
+import { ERC20_ABI } from './erc20';
+import { MOCK_ERC20_ABI } from './mockERC20';
+
+export { ERC20_ABI, MOCK_ERC20_ABI };
+
 // Position status enum matching the contract
 export const POSITION_STATUS = { ACTIVE: 0, SETTLED: 1, EXPIRED: 2 } as const;
 
@@ -2168,43 +2173,11 @@ export const CONSTANT_AMM_ABI = [
   },
 ] as const;
 
-export const ERC20_ABI = [
-  {
-    type: 'function', name: 'approve', stateMutability: 'nonpayable',
-    inputs: [{ name: 'spender', type: 'address' }, { name: 'amount', type: 'uint256' }],
-    outputs: [{ name: 'success', type: 'bool' }],
-  },
-  {
-    type: 'function', name: 'allowance', stateMutability: 'view',
-    inputs: [{ name: 'owner', type: 'address' }, { name: 'spender', type: 'address' }],
-    outputs: [{ name: 'remaining', type: 'uint256' }],
-  },
-  {
-    type: 'function', name: 'balanceOf', stateMutability: 'view',
-    inputs: [{ name: 'account', type: 'address' }],
-    outputs: [{ name: 'balance', type: 'uint256' }],
-  },
-  {
-    type: 'function', name: 'decimals', stateMutability: 'view',
-    inputs: [],
-    outputs: [{ name: 'decimals', type: 'uint8' }],
-  },
-  {
-    type: 'function', name: 'symbol', stateMutability: 'view',
-    inputs: [],
-    outputs: [{ name: 'symbol', type: 'string' }],
-  },
-  {
-    type: 'function', name: 'name', stateMutability: 'view',
-    inputs: [],
-    outputs: [{ name: 'name', type: 'string' }],
-  },
-] as const;
-
 export const CONTRACT_ABIS = {
   router: ROUTER_ABI,
   ilVault: IL_VAULT_ABI,
   oracleAdapter: ORACLE_ADAPTER_ABI,
   constantAMM: CONSTANT_AMM_ABI,
   erc20: ERC20_ABI,
+  mockErc20: MOCK_ERC20_ABI,
 } as const;

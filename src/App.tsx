@@ -6,6 +6,8 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Docs from './pages/Docs';
+import Faucet from './pages/Faucet';
+import Admin from './pages/Admin';
 
 function AppRoutes() {
   return (
@@ -15,6 +17,8 @@ function AppRoutes() {
           <Route index element={<Home />} />
           <Route path="app" element={<Dashboard />} />
           <Route path="docs" element={<Docs />} />
+          <Route path="faucet" element={<Faucet />} />
+          <Route path="admin" element={<Admin />} />
         </Route>
       </Routes>
     </BrowserRouter>

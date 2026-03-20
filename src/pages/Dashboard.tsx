@@ -1,29 +1,19 @@
 import React, { useState } from 'react';
-import { useAccount, useReadContract } from 'wagmi';
-import { formatUnits } from 'viem';
-import { Shield, Layers, TrendingDown, RefreshCw, ExternalLink, Lock, ArrowUpRight, CheckCircle2, Ticket } from 'lucide-react';
+import { useAccount } from 'wagmi';
+import { Shield, Layers, TrendingDown, RefreshCw, ExternalLink, Lock, ArrowUpRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTokenPrice } from '../web3/hooks/useOracle';
 import { useUserPositions, calcIL, formatAmount, type Position } from '../web3/hooks/useILVault';
 import { usePoolInfo, useComputePoolId } from '../web3/hooks/useRouter';
-import { useVoucherBalance } from '../web3/hooks/useVoucher';
 import { getContractAddress } from '../web3/contracts/addresses';
 import { polkadotTestnet } from '../web3/config/chains';
 import { DepositFlow } from '../components/flows/DepositFlow';
 import { WithdrawFlow } from '../components/flows/WithdrawFlow';
-import { RegisterProtocolFlow } from '../components/flows/RegisterProtocolFlow';
 import { WalletButton } from '../components/web3/WalletButton';
+import { CollateralManagementCard } from '../components/protocol/CollateralManagementCard';
 
 const TOKEN_A = getContractAddress('tokenA');
 const TOKEN_B = getContractAddress('tokenB');
-
-const COLLATERAL_MANAGER_ABI = [
-  {
-    type: 'function', name: 'getCollateralHealth', stateMutability: 'view',
-    inputs: [{ name: 'protocol', type: 'address' }],
-    outputs: [{ name: 'healthRatio', type: 'uint256' }],
-  },
-] as const;
 const BLOCKSCOUT = 'https://blockscout-testnet.polkadot.io';
 
 const fadeUp = {
@@ -373,20 +363,8 @@ export default function Dashboard() {
   const [tab, setTab] = useState<'lp' | 'protocol'>('lp');
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
-  const [registerOpen, setRegisterOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const { positions, isLoading: positionsLoading, refetch: refetchPositions } = useUserPositions(address);
-  const { balance: voucherBalance, refetch: refetchVouchers } = useVoucherBalance(address);
-
-  const { data: collateralHealth } = useReadContract({
-    address: getContractAddress('collateralManager'),
-    abi: COLLATERAL_MANAGER_ABI,
-    functionName: 'getCollateralHealth',
-    args: address ? [address] : undefined,
-    chainId: polkadotTestnet.id,
-    query: { enabled: !!address },
-  });
-  const isRegistered = (collateralHealth ?? 0n) > 0n;
 
   return (
     <div className="min-h-screen bg-[#050508] grid-bg pt-20">
@@ -462,53 +440,8 @@ export default function Dashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  className="space-y-5"
                 >
-                  {/* Voucher balance card */}
-                  <div className="card card-pink p-6">
-                    <div className="flex items-start justify-between mb-6">
-                      <div>
-                        <p className="font-data text-[10px] uppercase tracking-[0.18em] text-zinc-600 mb-1">Protocol Dashboard</p>
-                        <h2 className="text-2xl font-display font-bold tracking-tight text-white">IL Vouchers</h2>
-                        <p className="font-data text-xs text-zinc-600 mt-0.5">Minted to your address when LPs deposit</p>
-                      </div>
-                      <div className="w-10 h-10 rounded-xl bg-[#FF0877]/10 border border-[#FF0877]/20 flex items-center justify-center">
-                        <Ticket className="w-5 h-5 text-[#FF0877]" />
-                      </div>
-                    </div>
-
-                    <div className="stat-cell p-5 mb-5">
-                      <p className="font-data text-[10px] uppercase tracking-[0.12em] text-zinc-600 mb-2">Voucher Balance</p>
-                      <p className="font-data text-4xl text-white">{voucherBalance.toString()}</p>
-                      <p className="font-data text-xs text-zinc-700 mt-1">ILV tokens held</p>
-                    </div>
-
-                    <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#FF0877]/[0.05] border border-[#FF0877]/[0.15] mb-5">
-                      <Shield className="w-3.5 h-3.5 text-[#FF0877] flex-shrink-0" />
-                      <p className="font-data text-xs text-[#FF0877]/80">Each voucher represents one unit of IL obligation for your pool</p>
-                    </div>
-
-                    {isRegistered ? (
-                      <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/[0.2]">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                        <div>
-                          <p className="font-data text-xs text-emerald-400 font-medium">Registered ✓</p>
-                          <p className="font-data text-[10px] text-emerald-400/60 mt-0.5">Your protocol is active and accepting LPs</p>
-                        </div>
-                        <button
-                          onClick={() => refetchVouchers()}
-                          className="ml-auto w-7 h-7 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center text-zinc-600 hover:text-white transition-colors"
-                        >
-                          <RefreshCw className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button onClick={() => setRegisterOpen(true)} className="btn-primary">
-                        <ArrowUpRight className="w-3.5 h-3.5" />
-                        Register Protocol
-                      </button>
-                    )}
-                  </div>
+                  <CollateralManagementCard userAddress={address} />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -536,7 +469,6 @@ export default function Dashboard() {
 
       <DepositFlow isOpen={depositOpen} onClose={() => setDepositOpen(false)} userAddress={address} onSuccess={refetchPositions} />
       <WithdrawFlow isOpen={withdrawOpen} onClose={() => setWithdrawOpen(false)} position={selectedPosition} userAddress={address} onSuccess={refetchPositions} />
-      <RegisterProtocolFlow isOpen={registerOpen} onClose={() => setRegisterOpen(false)} userAddress={address} onSuccess={refetchVouchers} />
     </div>
   );
 }

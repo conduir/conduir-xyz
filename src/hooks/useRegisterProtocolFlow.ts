@@ -17,7 +17,8 @@ export interface RegisterState {
   txHash: string | null;
 }
 
-const LISTING_FEE = parseUnits('100', 18);
+const USDC_DECIMALS = 6;
+const LISTING_FEE = parseUnits('100', USDC_DECIMALS);
 const USDC = getContractAddress('mockUsdc');
 const ROUTER = getContractAddress('router');
 const POOL_ID: Hex = '0x0000000000000000000000000000000000000000000000000000000000000000';
@@ -48,7 +49,7 @@ export function useRegisterProtocolFlow(_userAddress?: Address) {
   const approveUsdc = useCallback(async () => {
     set({ isSubmitting: true, error: null });
     try {
-      const collateralBigInt = parseUnits(state.collateralAmount, 18);
+      const collateralBigInt = parseUnits(state.collateralAmount, USDC_DECIMALS);
       const totalApproval = collateralBigInt + LISTING_FEE;
       await writeContractAsync({
         address: USDC,
@@ -67,7 +68,7 @@ export function useRegisterProtocolFlow(_userAddress?: Address) {
   const confirmRegister = useCallback(async () => {
     set({ isSubmitting: true, error: null });
     try {
-      const collateralBigInt = parseUnits(state.collateralAmount, 18);
+      const collateralBigInt = parseUnits(state.collateralAmount, USDC_DECIMALS);
       const hash = await registerProtocol(POOL_ID, collateralBigInt);
       set({ isSubmitting: false, step: 'success', txHash: hash });
     } catch (e: any) {
@@ -80,7 +81,7 @@ export function useRegisterProtocolFlow(_userAddress?: Address) {
   }), []);
 
   const totalApproval = state.collateralAmount
-    ? formatUnits(parseUnits(state.collateralAmount || '0', 18) + LISTING_FEE, 18)
+    ? formatUnits(parseUnits(state.collateralAmount || '0', USDC_DECIMALS) + LISTING_FEE, USDC_DECIMALS)
     : '100';
 
   return {
